@@ -16,7 +16,7 @@ class Room(Enum):
 
 
 @unique
-class Activity(Enum):
+class ActivityEnum(Enum):
     SLEEP = 1
     PERSONAL = 2
     EAT = 3
@@ -135,14 +135,14 @@ act_room = [
 
 
 class Activity:
-    def __init__(self, Activity):
-        self.Activity = Activity
+    def __init__(self, activity):
+        self.activity = activity
 
     def __repr__(self):
-        return str(self.Activity)
+        return str(self.activity)
 
     def __str__(self):
-        return self.Activity
+        return str(self.activity)
 
 
 class Context:
@@ -152,6 +152,12 @@ class Context:
         self.time = time
         self.age = age
         self.group = group
+
+    def __repr__(self):
+        return "Context[" + str(self.access_way)
+
+    def __str__(self):
+        return self.Activity
 
 
 class User:
@@ -168,13 +174,12 @@ class Device:
 
 
 class Request:
-    def __init__(self, device, user, ):
+    def __init__(self, device, user, context, action):
         self.id = id
-        self.device_class = device_class
-        self.room = room
-
-
-# def on_request():
+        self.device = device
+        self.user = user
+        self.context = context
+        self.action = action
 
 
 act_window = queue.Queue(WINDOW_SIZE)
@@ -184,13 +189,31 @@ with open('d6_2m_0tm.csv', newline='') as csvfile:
     next(spamreader)
     for row in spamreader:
         room = next(
-            room for room in act_room if Activity[row[29].upper()] in room["activities"])
+            room for room in act_room if ActivityEnum[row[29].upper()] in room["activities"])
         print(row[29] + " -> " + str(room["id"]) + " - " + row[30])
-        act = Activity(Activity[row[29].upper()])
-        if act_window.empty() or act.Activity is not act_window.queue[act_window.qsize() - 1].Activity:
+        act = Activity(ActivityEnum[row[29].upper()])
+        if act_window.empty() or act.activity is not act_window.queue[act_window.qsize() - 1].activity:
             if act_window.full():
                 act_window.get()
             act_window.put(act)
             print(act_window.queue)
 
         if row[30] == "2016-03-03 18:30:31":
+            req = Request(Device(1, DeviceClass.CRITICAL, Room.LIVINGROOM), User(1, UserLevel.VISITOR), Context(AccessWay.REQUESTED, Localization.INTERNAL, Time.NIGHT, Age.KID, Group.ALONE), Action.ONOFF)
+
+
+suspect_list = []
+blocked_list = []
+
+# def on_request(req):
+#     verified = False
+#     verify_user_device()
+#     verify_context()
+#     verify_activities()
+#     if not verified:
+#         suspect = False
+#         verify_impersonation()
+#         if suspect and req.user.id in suspect_list:
+#             blocked_list.append(req.user.id)
+#         elif suspect:
+#             suspect_list.append(req.user.id)
