@@ -45,6 +45,7 @@ class UserLevel(Enum):
     CHILD = 3
     VISITOR = 4
 
+
 @unique
 class AccessWay(Enum):
     PERSONAL = 1
@@ -79,11 +80,12 @@ class Group(Enum):
 
 
 act_room = [
-    {"id": Room.BEDROOM, "activities": [Activity.SLEEP]},
-    {"id": Room.BATHROOM, "activities": [Activity.PERSONAL]},
-    {"id": Room.KITCHEN, "activities": [Activity.EAT]},
-    {"id": Room.LIVINGROOM, "activities": [Activity.LEISURE]},
-    {"id": Room.UNKOWN, "activities": [Activity.OTHER, Activity.ANOMALY]}
+    {"id": Room.BEDROOM, "activities": [ActivityEnum.SLEEP]},
+    {"id": Room.BATHROOM, "activities": [ActivityEnum.PERSONAL]},
+    {"id": Room.KITCHEN, "activities": [ActivityEnum.EAT]},
+    {"id": Room.LIVINGROOM, "activities": [ActivityEnum.LEISURE]},
+    {"id": Room.UNKOWN, "activities": [
+        ActivityEnum.OTHER, ActivityEnum.ANOMALY]}
 ]
 
 # user_levels = {
@@ -154,10 +156,10 @@ class Context:
         self.group = group
 
     def __repr__(self):
-        return "Context[" + str(self.access_way)
+        return "Context[{},{},{},{},{}]".format(str(self.access_way), str(self.localization), str(self.time), str(self.age), str(self.group))
 
     def __str__(self):
-        return self.Activity
+        return "Context[{},{},{},{},{}]".format(str(self.access_way), str(self.localization), str(self.time), str(self.age), str(self.group))
 
 
 class User:
@@ -165,12 +167,24 @@ class User:
         self.id = id
         self.user_level = user_level
 
+    def __repr__(self):
+        return "User[{},{}]".format(str(self.id), str(self.user_level))
+
+    def __str__(self):
+        return "User[{},{}]".format(str(self.id), str(self.user_level))
+
 
 class Device:
     def __init__(self, id, device_class, room):
         self.id = id
         self.device_class = device_class
         self.room = room
+
+    def __repr__(self):
+        return "Device[{},{},{}]".format(str(self.id), str(self.device_class), str(self.room))
+
+    def __str__(self):
+        return "Device[{},{},{}]".format(str(self.id), str(self.device_class), str(self.room))
 
 
 class Request:
@@ -181,8 +195,52 @@ class Request:
         self.context = context
         self.action = action
 
+    def __repr__(self):
+        return "Request[{},{},{},{},{}]".format(str(self.id), str(self.device), str(self.user), str(self.context), str(self.action))
+
+    def __str__(self):
+        return "Context[{},{},{},{},{}]".format(str(self.id), str(self.device), str(self.user), str(self.context), str(self.action))
+
 
 act_window = queue.Queue(WINDOW_SIZE)
+requests = [{"time": "2016-03-03 18:30:31", "req": Request(Device(1, DeviceClass.CRITICAL, Room.LIVINGROOM), User(1, UserLevel.VISITOR), Context(
+    AccessWay.REQUESTED, Localization.INTERNAL, Time.NIGHT, Age.KID, Group.ALONE), Action.ONOFF)}]
+
+suspect_list = []
+blocked_list = []
+
+
+def on_request(req):
+    print("Processing Request: {}".format(str(req)))
+    if not verify_user_device(req) or not verify_context(req) or verify_activities(req):
+        suspect = False
+        # verify_impersonation()
+        if suspect and req.user.id in suspect_list:
+            blocked_list.append(req.user.id)
+        elif suspect:
+            suspect_list.append(req.user.id)
+
+
+def verify_user_device(req):
+    print("Verify user level")
+    if req.device.device_class is DeviceClass.CRITICAL and req.user.user_level.value > 2:
+        print("User level is too low for device")
+        return False
+    return True
+
+
+def verify_context(req):
+    print("Verify context")
+    return True
+
+
+def verify_activities(req):
+    print("Verify activities")
+    last_act = act_window.queue[act_window.qsize() - 1].activity
+    room = next(
+        room for room in act_room if last_act in room["activities"])
+    return True
+
 
 with open('d6_2m_0tm.csv', newline='') as csvfile:
     spamreader = csv.reader(csvfile, delimiter=',')
@@ -198,22 +256,6 @@ with open('d6_2m_0tm.csv', newline='') as csvfile:
             act_window.put(act)
             print(act_window.queue)
 
-        if row[30] == "2016-03-03 18:30:31":
-            req = Request(Device(1, DeviceClass.CRITICAL, Room.LIVINGROOM), User(1, UserLevel.VISITOR), Context(AccessWay.REQUESTED, Localization.INTERNAL, Time.NIGHT, Age.KID, Group.ALONE), Action.ONOFF)
-
-
-suspect_list = []
-blocked_list = []
-
-# def on_request(req):
-#     verified = False
-#     verify_user_device()
-#     verify_context()
-#     verify_activities()
-#     if not verified:
-#         suspect = False
-#         verify_impersonation()
-#         if suspect and req.user.id in suspect_list:
-#             blocked_list.append(req.user.id)
-#         elif suspect:
-#             suspect_list.append(req.user.id)
+        req = next((req for req in requests if req["time"] == row[30]), None)
+        if req is not None:
+            on_request(req["req"])
