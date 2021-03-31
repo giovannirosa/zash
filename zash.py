@@ -26,54 +26,60 @@ class ActivityEnum(Enum):
 
 
 @unique
-class Action(Enum):
-    VISUALIZE = 1
-    ONOFF = 2
-    MANAGE = 3
-
-
-@unique
-class DeviceClass(Enum):
-    CRITICAL = 1
-    NONCRITICAL = 2
-
-
-@unique
-class UserLevel(Enum):
-    ADMIN = 1
-    ADULT = 2
-    CHILD = 3
-    VISITOR = 4
-
-
-@unique
-class AccessWay(Enum):
-    PERSONAL = 1
-    HOUSE = 2
-    REQUESTED = 3
-
-
-@unique
-class Localization(Enum):
-    EXTERNAL = 1
-    INTERNAL = 2
-
-
-@unique
-class Time(Enum):
+class RequestTime(Enum):
     MORNING = 1
     AFTERNOON = 2
     NIGHT = 3
 
 
-@unique
+@unique  # id, additional sec
+class Action(Enum):
+    MANAGE = 1, 40
+    ONOFF = 2, 20
+    VISUALIZE = 3, 0
+
+
+@unique  # id, initial sec
+class DeviceClass(Enum):
+    CRITICAL = 1, 50
+    NONCRITICAL = 2, 30
+
+
+@unique # id, initial sec
+class UserLevel(Enum):
+    ADMIN = 1, 70
+    ADULT = 2, 50
+    CHILD = 3, 30
+    VISITOR = 4, 0
+
+
+@unique # id, given sec
+class AccessWay(Enum):
+    REQUESTED = 1, 30
+    HOUSE = 2, 20
+    PERSONAL = 3, 10
+
+
+@unique # id, given sec
+class Localization(Enum):
+    INTERNAL = 1, 20
+    EXTERNAL = 2, 10
+    
+
+@unique # id, given sec
+class Time(Enum):
+    COMMOM = 1, 20
+    UNCOMMOM = 1, 10
+
+
+@unique # id, given sec
 class Age(Enum):
-    KID = 1
-    TEEN = 2
-    ADULT = 3
+    ADULT = 1, 30
+    TEEN = 2, 20
+    KID = 3, 10
 
 
-@unique
+@unique # id, given sec
 class Group(Enum):
     ALONE = 1
     TOGETHER = 2
@@ -223,9 +229,12 @@ def on_request(req):
 
 def verify_user_device(req):
     print("Verify user level")
-    if req.device.device_class is DeviceClass.CRITICAL and req.user.user_level.value > 2:
-        print("User level is too low for device")
-        return False
+    if req.device.device_class is DeviceClass.CRITICAL:
+        if req.user.user_level.value > 2 or (req.action.MANAGE and req.user.user_level.value > 1):
+            print("User level is too low for device")
+            return False
+        elif req.action.MANAGE and req.user.user_level.value > 1:
+
     return True
 
 
