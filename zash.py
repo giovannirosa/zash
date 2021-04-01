@@ -41,11 +41,11 @@ class Action(Enum):
 
 @unique  # id, initial sec
 class DeviceClass(Enum):
-    CRITICAL = 1, 50
-    NONCRITICAL = 2, 30
+    CRITICAL = 1, 30
+    NONCRITICAL = 2, 0
 
 
-@unique # id, initial sec
+@unique  # id, initial sec
 class UserLevel(Enum):
     ADMIN = 1, 70
     ADULT = 2, 50
@@ -53,36 +53,36 @@ class UserLevel(Enum):
     VISITOR = 4, 0
 
 
-@unique # id, given sec
+@unique  # id, given sec
 class AccessWay(Enum):
     REQUESTED = 1, 30
     HOUSE = 2, 20
     PERSONAL = 3, 10
 
 
-@unique # id, given sec
+@unique  # id, given sec
 class Localization(Enum):
     INTERNAL = 1, 20
     EXTERNAL = 2, 10
-    
 
-@unique # id, given sec
+
+@unique  # id, given sec
 class Time(Enum):
     COMMOM = 1, 20
     UNCOMMOM = 1, 10
 
 
-@unique # id, given sec
+@unique  # id, given sec
 class Age(Enum):
     ADULT = 1, 30
     TEEN = 2, 20
     KID = 3, 10
 
 
-@unique # id, given sec
+@unique  # id, given sec
 class Group(Enum):
-    ALONE = 1
-    TOGETHER = 2
+    TOGETHER = 1, 20
+    ALONE = 2, 10
 
 
 act_room = [
@@ -167,6 +167,9 @@ class Context:
     def __str__(self):
         return "Context[{},{},{},{},{}]".format(str(self.access_way), str(self.localization), str(self.time), str(self.age), str(self.group))
 
+    def trust(self):
+        return self.access_way.value[1] + self.localization.value[1] + self.time.value[1] + self.age.value[1] + self.group.value[1]
+
 
 class User:
     def __init__(self, id, user_level):
@@ -210,7 +213,7 @@ class Request:
 
 act_window = queue.Queue(WINDOW_SIZE)
 requests = [{"time": "2016-03-03 18:30:31", "req": Request(Device(1, DeviceClass.CRITICAL, Room.LIVINGROOM), User(1, UserLevel.VISITOR), Context(
-    AccessWay.REQUESTED, Localization.INTERNAL, Time.NIGHT, Age.KID, Group.ALONE), Action.ONOFF)}]
+    AccessWay.REQUESTED, Localization.INTERNAL, Time.UNCOMMOM, Age.KID, Group.ALONE), Action.ONOFF)}]
 
 suspect_list = []
 blocked_list = []
@@ -227,19 +230,44 @@ def on_request(req):
             suspect_list.append(req.user.id)
 
 
+# common ontologies like:
+#   - critical devices:
+#       - visitor cannot even visualize
+#       - kids can only visualize
+#       - adults can only visualize and control
+#       - admins can visualize, control and manage
+#   - non-critical devices:
+#       - visitor and kids can visualize and control
+#       - adults and admins can visualize, control and manage
 def verify_user_device(req):
-    print("Verify user level")
+    print("Verify user level and device class")
+    compatible = True
     if req.device.device_class is DeviceClass.CRITICAL:
-        if req.user.user_level.value > 2 or (req.action.MANAGE and req.user.user_level.value > 1):
-            print("User level is too low for device")
+        if (req.action is Action.MANAGE and req.user.user_level.value > 1) or \
+            (req.action is Action.ONOFF and req.user.user_level.value > 2) or \
+                (req.action is Action.VISUALIZE and req.user.user_level.value > 3):
+            compatible = False
             return False
-        elif req.action.MANAGE and req.user.user_level.value > 1:
+    else:
+        if (req.action is Action.MANAGE and req.user.user_level.value > 2):
+            compatible = False
+            return False
+    if not compatible:
+        print("User level is incompatible with the action on the device")
+    return compatible
 
-    return True
 
-
+# static trust calculation based on expected
+# for [DeviceClass x Action] and [UserLevel x Action]
+# from [AccessWay, Localization, Time, Age, Group]
 def verify_context(req):
     print("Verify context")
+    expected_device = req.device.device_class.value[1] + req.action.value[1]
+    expected_user = req.user.user_level.value[1] + req.action.value[1]
+    expected = expected_device if expected_device > expected_user else expected_user
+    if req.context.trust() < expected:
+        print("Trust level is below expected")
+        return False
     return True
 
 
@@ -251,6 +279,7 @@ def verify_activities(req):
     return True
 
 
+# 174,809 lines of records, 2 months, 60 days, 1 line per second
 with open('d6_2m_0tm.csv', newline='') as csvfile:
     spamreader = csv.reader(csvfile, delimiter=',')
     next(spamreader)
