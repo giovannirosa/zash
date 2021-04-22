@@ -35,7 +35,7 @@ class RequestTime(Enum):
 @unique  # id, additional sec
 class Action(Enum):
     MANAGE = 1, 40
-    ONOFF = 2, 20
+    CONTROL = 2, 20
     VISUALIZE = 3, 0
 
 
@@ -213,7 +213,7 @@ class Request:
 
 act_window = queue.Queue(WINDOW_SIZE)
 requests = [{"time": "2016-03-03 18:30:31", "req": Request(Device(1, DeviceClass.CRITICAL, Room.LIVINGROOM), User(1, UserLevel.VISITOR), Context(
-    AccessWay.REQUESTED, Localization.INTERNAL, Time.UNCOMMOM, Age.KID, Group.ALONE), Action.ONOFF)}]
+    AccessWay.REQUESTED, Localization.INTERNAL, Time.UNCOMMOM, Age.KID, Group.ALONE), Action.CONTROL)}]
 
 suspect_list = []
 blocked_list = []
@@ -244,7 +244,7 @@ def verify_user_device(req):
     compatible = True
     if req.device.device_class is DeviceClass.CRITICAL:
         if (req.action is Action.MANAGE and req.user.user_level.value > 1) or \
-            (req.action is Action.ONOFF and req.user.user_level.value > 2) or \
+            (req.action is Action.CONTROL and req.user.user_level.value > 2) or \
                 (req.action is Action.VISUALIZE and req.user.user_level.value > 3):
             compatible = False
             return False
@@ -271,6 +271,7 @@ def verify_context(req):
     return True
 
 
+# 
 def verify_activities(req):
     print("Verify activities")
     last_act = act_window.queue[act_window.qsize() - 1].activity
