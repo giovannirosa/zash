@@ -4,68 +4,44 @@ import itertools
 import csv
 
 NUMBER_OF_DEVICES = 29
-state_space = []
-transition_space = []
-transition_occurrences = []
+class MarkovChain:
+    def __init__(self):
+        self.state_space = []
+        self.transition_space = []
+        self.transition_matrix = []
 
-# def build_statespace():
-#     # since each device state is 0 or 1, the total number of states is 2^number_of_devices
-#     number_of_states = 2 ** NUMBER_OF_DEVICES
-#     states = [list(i) for i in itertools.product([0, 1], repeat=number_of_states)]
-#     return states
+    def build_transition(self, current_state, last_state):
+        if not current_state in self.state_space:
+            self.state_space.append(current_state)
+        if last_state is not None:
+            transition_col = next((transition_col for transition_col in self.transition_matrix if last_state == transition_col["state"]), None)
+            if transition_col is None:
+                transition_col = {"state": current_state, "next_states": [], "total_occ": 1}
+                self.transition_matrix.append(transition_col)
+            else:
+                transition_col["total_occ"] += 1
 
+            next_state = next((next_state for next_state in transition_col["next_states"] if current_state == next_state["state"]), None)
+            if next_state is None:
+                transition_col["next_states"].append({"state": current_state, "occurrences": 1, "percentage": 1 / transition_col["total_occ"]})
+            else:
+                next_state["occurrences"] += 1
 
-def build_transition(row, last_state):
-    current_state = row[0:29]
-    if not current_state in state_space:
-        state_space.append(current_state)
-    if last_state is not None:
-        transition = [last_state,current_state]
-        if transition not in transition_space:
-            print(row[30])
-            transition_space.append(transition)
-            transition_occurrences.append(1)
-        transition_index = transition_space.index(transition)
-        transition_occurrences[transition_index] += 1
-        
-        
+            for next_state_it in transition_col["next_states"]:
+                next_state_it["percentage"] = next_state_it["occurrences"] / transition_col["total_occ"]
 
+            transition = [last_state, current_state]
+            if transition not in self.transition_space:
+                self.transition_space.append(transition)
 
+markov_chain = MarkovChain()
 
 with open('d6_2m_0tm.csv', newline='') as csvfile:
     spamreader = csv.reader(csvfile, delimiter=',')
     next(spamreader)
     last_state = None
     for row in spamreader:
-        build_transition(row, last_state)
-        last_state = row[0:29]
+        markov_chain.build_transition(row[0:NUMBER_OF_DEVICES], last_state)
+        last_state = row[0:NUMBER_OF_DEVICES]
 
-print(len(state_space))
-# print(state_space)
-print('')
-print(len(transition_space))
-# print(transition_space)
-print('')
-print(len(transition_occurrences))
-# print(transition_occurrences)
-
-transition_matrix = []
-for state in state_space:
-    print(state)
-    matches = [transition for transition in transition_space if transition[0] == state]
-    # print(matches)
-    # print()
-    total_occ = 0
-    for match in matches:
-        transition_index = transition_space.index(match)
-        total_occ += transition_occurrences[transition_index]
-        transition_state = {"state": match[0], "next_state": match[1], "value": transition_occurrences[transition_index]}
-        # print(transition_state)
-        transition_matrix.append(transition_state)
-    for transition_state in transition_matrix:
-        transition_state["value"] = transition_state["value"] / total_occ
-        print(transition_state)
-    print()
-
-    
-    
+print(markov_chain.transition_matrix)
