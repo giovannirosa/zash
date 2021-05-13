@@ -1,214 +1,15 @@
 import csv
 import queue
-from enum import Enum, unique
+from datetime import datetime, timedelta
+from markov_zash import MarkovChain
+from enums_zash import *
+from models_zash import *
 
 
 WINDOW_SIZE = 5
-
-
-@unique
-class Room(Enum):
-    BEDROOM = 1
-    BATHROOM = 2
-    KITCHEN = 3
-    LIVINGROOM = 4
-    UNKOWN = 5
-
-
-@unique
-class ActivityEnum(Enum):
-    SLEEP = 1
-    PERSONAL = 2
-    EAT = 3
-    LEISURE = 4
-    OTHER = 5
-    ANOMALY = 6
-
-
-@unique
-class RequestTime(Enum):
-    MORNING = 1
-    AFTERNOON = 2
-    NIGHT = 3
-
-
-@unique  # id, additional sec
-class Action(Enum):
-    MANAGE = 1, 40
-    CONTROL = 2, 20
-    VISUALIZE = 3, 0
-
-
-@unique  # id, initial sec
-class DeviceClass(Enum):
-    CRITICAL = 1, 30
-    NONCRITICAL = 2, 0
-
-
-@unique  # id, initial sec
-class UserLevel(Enum):
-    ADMIN = 1, 70
-    ADULT = 2, 50
-    CHILD = 3, 30
-    VISITOR = 4, 0
-
-
-@unique  # id, given sec
-class AccessWay(Enum):
-    REQUESTED = 1, 30
-    HOUSE = 2, 20
-    PERSONAL = 3, 10
-
-
-@unique  # id, given sec
-class Localization(Enum):
-    INTERNAL = 1, 20
-    EXTERNAL = 2, 10
-
-
-@unique  # id, given sec
-class Time(Enum):
-    COMMOM = 1, 20
-    UNCOMMOM = 1, 10
-
-
-@unique  # id, given sec
-class Age(Enum):
-    ADULT = 1, 30
-    TEEN = 2, 20
-    KID = 3, 10
-
-
-@unique  # id, given sec
-class Group(Enum):
-    TOGETHER = 1, 20
-    ALONE = 2, 10
-
-
-act_room = [
-    {"id": Room.BEDROOM, "activities": [ActivityEnum.SLEEP]},
-    {"id": Room.BATHROOM, "activities": [ActivityEnum.PERSONAL]},
-    {"id": Room.KITCHEN, "activities": [ActivityEnum.EAT]},
-    {"id": Room.LIVINGROOM, "activities": [ActivityEnum.LEISURE]},
-    {"id": Room.UNKOWN, "activities": [
-        ActivityEnum.OTHER, ActivityEnum.ANOMALY]}
-]
-
-# user_levels = {
-#     "admin": 70,
-#     "adult": 50,
-#     "kid": 30,
-#     "visitor": 0
-# }
-
-# device_classes = {
-#     "critical": 70,
-#     "non-critical": 50,
-# }
-
-# capabilities = {
-#     "visualize": 0,
-#     "on/off": 20,
-#     "manage": 40,
-# }
-
-# access_way = {
-#     "personal_device": 10,
-#     "house_device": 20,
-#     "required_device": 30
-# }
-
-# localization = {
-#     "external": 10,
-#     "proximities": 20,
-#     "internal": 30
-# }
-
-# time = {
-#     "morning": 10,
-#     "afternoon": 20,
-#     "night": 30
-# }
-
-# age = {
-#     "kid": 10,
-#     "teen": 20,
-#     "adult": 30
-# }
-
-# group = {
-#     "alone": 10,
-#     "grouped": 20
-# }
-
-
-class Activity:
-    def __init__(self, activity):
-        self.activity = activity
-
-    def __repr__(self):
-        return str(self.activity)
-
-    def __str__(self):
-        return str(self.activity)
-
-
-class Context:
-    def __init__(self, access_way, localization, time, age, group):
-        self.access_way = access_way
-        self.localization = localization
-        self.time = time
-        self.age = age
-        self.group = group
-
-    def __repr__(self):
-        return "Context[{},{},{},{},{}]".format(str(self.access_way), str(self.localization), str(self.time), str(self.age), str(self.group))
-
-    def __str__(self):
-        return "Context[{},{},{},{},{}]".format(str(self.access_way), str(self.localization), str(self.time), str(self.age), str(self.group))
-
-    def trust(self):
-        return self.access_way.value[1] + self.localization.value[1] + self.time.value[1] + self.age.value[1] + self.group.value[1]
-
-
-class User:
-    def __init__(self, id, user_level):
-        self.id = id
-        self.user_level = user_level
-
-    def __repr__(self):
-        return "User[{},{}]".format(str(self.id), str(self.user_level))
-
-    def __str__(self):
-        return "User[{},{}]".format(str(self.id), str(self.user_level))
-
-
-class Device:
-    def __init__(self, id, device_class, room):
-        self.id = id
-        self.device_class = device_class
-        self.room = room
-
-    def __repr__(self):
-        return "Device[{},{},{}]".format(str(self.id), str(self.device_class), str(self.room))
-
-    def __str__(self):
-        return "Device[{},{},{}]".format(str(self.id), str(self.device_class), str(self.room))
-
-
-class Request:
-    def __init__(self, device, user, context, action):
-        self.id = id
-        self.device = device
-        self.user = user
-        self.context = context
-        self.action = action
-
-    def __repr__(self):
-        return "Request[{},{},{},{},{}]".format(str(self.id), str(self.device), str(self.user), str(self.context), str(self.action))
-
-    def __str__(self):
-        return "Context[{},{},{},{},{}]".format(str(self.id), str(self.device), str(self.user), str(self.context), str(self.action))
+NUMBER_OF_DEVICES = 28
+ACTIVITY_COL = 29
+DATE_COL = 30
 
 
 act_window = queue.Queue(WINDOW_SIZE)
@@ -217,11 +18,24 @@ requests = [{"time": "2016-03-03 18:30:31", "req": Request(Device(1, DeviceClass
 
 suspect_list = []
 blocked_list = []
+block_threshold = 3
+block_interval = 24
+markov_build_interval = 32
+past_days = 0
+is_markov_building = True
+
+markov_chain = MarkovChain()
 
 
-def on_request(req):
+# Authorization Component
+# checks for:
+#   - Ontology Component
+#   - Context Component
+#   - Activity Component
+# in order, and blocks user if failed enough within interval
+def on_request(req, current_state, last_state):
     print("Processing Request: {}".format(str(req)))
-    if not verify_user_device(req) or not verify_context(req) or verify_activities(req):
+    if not verify_user_device(req) or not verify_context(req) or not verify_activities(current_state, last_state):
         suspect = False
         # verify_impersonation()
         if suspect and req.user.id in suspect_list:
@@ -230,6 +44,7 @@ def on_request(req):
             suspect_list.append(req.user.id)
 
 
+# Ontology Component
 # common ontologies like:
 #   - critical devices:
 #       - visitor cannot even visualize
@@ -243,20 +58,19 @@ def verify_user_device(req):
     print("Verify user level and device class")
     compatible = True
     if req.device.device_class is DeviceClass.CRITICAL:
-        if (req.action is Action.MANAGE and req.user.user_level.value > 1) or \
-            (req.action is Action.CONTROL and req.user.user_level.value > 2) or \
-                (req.action is Action.VISUALIZE and req.user.user_level.value > 3):
+        if (req.action is Action.MANAGE and req.user.user_level.value[0] > 1) or \
+            (req.action is Action.CONTROL and req.user.user_level.value[0] > 2) or \
+                (req.action is Action.VISUALIZE and req.user.user_level.value[0] > 3):
             compatible = False
-            return False
     else:
-        if (req.action is Action.MANAGE and req.user.user_level.value > 2):
+        if (req.action is Action.MANAGE and req.user.user_level.value[0] > 2):
             compatible = False
-            return False
     if not compatible:
-        print("User level is incompatible with the action on the device")
+        print("User level {} is incompatible with the action {} on the device class {}".format(req.user.user_level, req.action, req.device.device_class))
     return compatible
 
 
+# Context Component
 # static trust calculation based on expected
 # for [DeviceClass x Action] and [UserLevel x Action]
 # from [AccessWay, Localization, Time, Age, Group]
@@ -271,30 +85,49 @@ def verify_context(req):
     return True
 
 
-# 
-def verify_activities(req):
+# Activity Component
+# check next state probability using a Markov Chain
+# updates transition matrix with successful requests
+def verify_activities(current_state, last_state):
     print("Verify activities")
-    last_act = act_window.queue[act_window.qsize() - 1].activity
-    room = next(
-        room for room in act_room if last_act in room["activities"])
-    return True
+    if is_markov_building:
+        markov_chain.build_transition(current_state, last_state)
+    else:
+        prob = markov_chain.get_probability(current_state, last_state)
+        if prob > 0:
+            markov_chain.build_transition(current_state, last_state)
+            return True
+        else:
+            return False
+    
 
 
 # 174,809 lines of records, 2 months, 60 days, 1 line per second
 with open('d6_2m_0tm.csv', newline='') as csvfile:
     spamreader = csv.reader(csvfile, delimiter=',')
     next(spamreader)
+    last_state = None
+    limit_date = None
     for row in spamreader:
-        room = next(
-            room for room in act_room if ActivityEnum[row[29].upper()] in room["activities"])
-        print(row[29] + " -> " + str(room["id"]) + " - " + row[30])
-        act = Activity(ActivityEnum[row[29].upper()])
+        current_date = datetime.strptime(row[DATE_COL], '%Y-%m-%d %H:%M:%S')
+        if limit_date is None:
+            limit_date = current_date + timedelta(days=markov_build_interval)
+        elif is_markov_building and current_date > limit_date:
+            is_markov_building = False
+            print("Markov Chain stopped building transition matrix at {}".format(current_date))
+
+        # room = next(
+        #     room for room in act_room if ActivityEnum[row[29].upper()] in room["activities"])
+        # print(row[29] + " -> " + str(room["id"]) + " - " + row[30])
+        act = Activity(ActivityEnum[row[ACTIVITY_COL].upper()])
+        current_state = row[:NUMBER_OF_DEVICES + 1]
         if act_window.empty() or act.activity is not act_window.queue[act_window.qsize() - 1].activity:
             if act_window.full():
                 act_window.get()
             act_window.put(act)
-            print(act_window.queue)
+            # print(act_window.queue)
 
-        req = next((req for req in requests if req["time"] == row[30]), None)
+        req = next((req for req in requests if req["time"] == row[DATE_COL]), None)
         if req is not None:
-            on_request(req["req"])
+            on_request(req["req"], current_state, last_state)
+        last_state = current_state

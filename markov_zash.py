@@ -1,6 +1,6 @@
-import csv
+# import csv
 
-NUMBER_OF_DEVICES = 29
+# NUMBER_OF_DEVICES = 29
 
 
 class MarkovChain:
@@ -38,20 +38,33 @@ class MarkovChain:
             if transition not in self.transition_space:
                 self.transition_space.append(transition)
 
+    def get_probability(self, current_state, last_state):
+        if [last_state, current_state] not in self.transition_space:
+            return 0
+        prob = 0
+        transition_col = next(
+            (transition_col for transition_col in self.transition_matrix if last_state == transition_col["state"]), None)
+        if transition_col is not None:
+            next_state = next(
+                (next_state for next_state in transition_col["next_states"] if current_state == next_state["state"]), None)
+            if next_state is not None:
+                prob = next_state["percentage"]
+        return prob
 
-markov_chain = MarkovChain()
 
-with open('d6_2m_0tm.csv', newline='') as csvfile:
-    spamreader = csv.reader(csvfile, delimiter=',')
-    next(spamreader)
-    last_state = None
-    for row in spamreader:
-        current_state = list(map(int, row[0:NUMBER_OF_DEVICES]))
-        markov_chain.build_transition(current_state, last_state)
-        last_state = current_state
+# markov_chain = MarkovChain()
+
+# with open('d6_2m_0tm.csv', newline='') as csvfile:
+#     spamreader = csv.reader(csvfile, delimiter=',')
+#     next(spamreader)
+#     last_state = None
+#     for row in spamreader:
+#         current_state = list(map(int, row[0:NUMBER_OF_DEVICES]))
+#         markov_chain.build_transition(current_state, last_state)
+#         last_state = current_state
 
 
 # print(len(markov_chain.state_space))
 # print(len(markov_chain.transition_matrix))
 # print(len(markov_chain.transition_space))
-print(markov_chain.transition_matrix)
+# print(markov_chain.transition_matrix)
