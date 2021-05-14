@@ -1,3 +1,5 @@
+from enums_zash import *
+
 class Activity:
     def __init__(self, activity):
         self.activity = activity
@@ -10,7 +12,7 @@ class Activity:
 
 
 class Context:
-    def __init__(self, access_way, localization, time, age, group):
+    def __init__(self, access_way: AccessWay, localization: Localization, time: Time, age: Age, group: Group):
         self.access_way = access_way
         self.localization = localization
         self.time = time
@@ -28,9 +30,13 @@ class Context:
 
 
 class User:
-    def __init__(self, id, user_level):
+    def __init__(self, id: int, user_level: UserLevel):
         self.id = id
         self.user_level = user_level
+        self.rejected = 0
+        self.start_interval = None
+        self.blocked = False
+
 
     def __repr__(self):
         return "User[{},{}]".format(str(self.id), str(self.user_level))
@@ -40,10 +46,11 @@ class User:
 
 
 class Device:
-    def __init__(self, id, device_class, room):
+    def __init__(self, id: int, device_class: DeviceClass, room: Room, active: bool):
         self.id = id
         self.device_class = device_class
         self.room = room
+        self.active = active
 
     def __repr__(self):
         return "Device[{},{},{}]".format(str(self.id), str(self.device_class), str(self.room))
@@ -53,7 +60,7 @@ class Device:
 
 
 class Request:
-    def __init__(self, device, user, context, action):
+    def __init__(self, id: int, device: Device, user: User, context: Context, action: Action):
         self.id = id
         self.device = device
         self.user = user
@@ -64,4 +71,4 @@ class Request:
         return "Request[{},{},{},{},{}]".format(str(self.id), str(self.device), str(self.user), str(self.context), str(self.action))
 
     def __str__(self):
-        return "Context[{},{},{},{},{}]".format(str(self.id), str(self.device), str(self.user), str(self.context), str(self.action))
+        return "Request[{},{},{},{},{}]".format(str(self.id), str(self.device), str(self.user), str(self.context), str(self.action))

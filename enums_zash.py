@@ -6,7 +6,9 @@ class Room(Enum):
     BATHROOM = 2
     KITCHEN = 3
     LIVINGROOM = 4
-    UNKOWN = 5
+    OFFICE = 5
+    HOUSE = 6
+    UNKOWN = 7
 
 
 @unique
