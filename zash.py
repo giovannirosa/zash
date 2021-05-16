@@ -65,15 +65,16 @@ markov_chain = MarkovChain()
 #   - Context Component
 #   - Activity Component
 # in order, and blocks user if failed enough within interval
-def on_request(req: Request, current_state, last_state):
+def on_request(req: Request, current_state, last_state, current_date):
     print("Authorization Component")
     print("Processing Request: {}".format(str(req)))
     if req.user.blocked:
         print("USER IS BLOCKED - Request is NOT authorized!")
         return False
     if not verify_user_device(req) or not verify_context(req) or not verify_activities(current_state, last_state):
-        req.user.rejected += 1
-        if req.user.rejected > block_threshold:
+        req.user.rejected.append(current_date)
+        print("User have now {} rejected requests!".format(len(req.user.rejected)))
+        if len(req.user.rejected) > block_threshold:
             req.user.blocked = True
             print("User {} is blocked!".format(req.user))
         print("Request is NOT authorized!")
@@ -180,12 +181,9 @@ with open('d6_2m_0tm.csv', newline='') as csvfile:
             act_window.put(act)
             # print(act_window.queue)
         
+        # clean rejects occurred out of interval
         for user in users:
-            if user.start_interval is None:
-                user.start_interval = current_date
-            elif user.start_interval + timedelta(hours=block_interval) > current_date:
-                user.start_interval = current_date
-                user.rejected = False
+            user.rejected = [rej_date for rej_date in user.rejected if current_date - rej_date < timedelta(hours=block_interval)]
 
         if last_state is not None:
             changes = [(i, e1, e2) for i, (e1, e2) in enumerate(zip(last_state, current_state)) if e1 != e2]
@@ -193,10 +191,10 @@ with open('d6_2m_0tm.csv', newline='') as csvfile:
             # print(changes)
             for change in changes:
                 if devices[change[0]].active:
-                    print(current_date)
+                    print(current_date, act)
                     id_req += 1
                     req = Request(id_req, devices[change[0]], users[0], Context(AccessWay.PERSONAL, Localization.INTERNAL, Time.COMMOM, Age.ADULT, Group.ALONE), Action.CONTROL)
-                    on_request(req, current_state, last_state)
+                    on_request(req, current_state, last_state, current_date)
                     print()
 
         last_state = current_state

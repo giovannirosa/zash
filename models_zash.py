@@ -33,7 +33,7 @@ class User:
     def __init__(self, id: int, user_level: UserLevel):
         self.id = id
         self.user_level = user_level
-        self.rejected = 0
+        self.rejected = []
         self.start_interval = None
         self.blocked = False
 
