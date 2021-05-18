@@ -58,6 +58,9 @@ is_markov_building = True
 
 markov_chain = MarkovChain()
 
+def send_message(user: User, message: str):
+    print("User {} received message: '{}'".format(user.id, message))
+
 
 # Authorization Component
 # checks for:
@@ -77,6 +80,8 @@ def on_request(req: Request, current_state, last_state, current_date):
         if len(req.user.rejected) > block_threshold:
             req.user.blocked = True
             print("User {} is blocked!".format(req.user))
+            for user in users:
+                send_message(user, "User {} is blocked!".format(req.user))
         print("Request is NOT authorized!")
         return False
     print("Request is authorized!")
@@ -101,7 +106,7 @@ def verify_user_device(req: Request):
     if req.device.device_class is DeviceClass.CRITICAL:
         if (req.action is Action.MANAGE and req.user.user_level.value[0] > 1) or \
             (req.action is Action.CONTROL and req.user.user_level.value[0] > 2) or \
-                (req.action is Action.VISUALIZE and req.user.user_level.value[0] > 3):
+                (req.action is Action.VIEW and req.user.user_level.value[0] > 3):
             compatible = False
     else:
         if (req.action is Action.MANAGE and req.user.user_level.value[0] > 2):
@@ -123,8 +128,7 @@ def verify_context(req: Request):
     print("Verify context {}".format(req.context))
     expected_device = req.device.device_class.value[1] + req.action.value[1]
     expected_user = req.user.user_level.value[1] + req.action.value[1]
-    expected = expected_device if expected_device > expected_user else expected_user
-    if req.context.trust() < expected:
+    if req.context.trust() < max(expected_device, expected_user):
         print("Trust level is BELOW expected!")
         return False
     print("Trust level is ABOVE expected!")

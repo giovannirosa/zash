@@ -32,7 +32,7 @@ class RequestTime(Enum):
 class Action(Enum):
     MANAGE = 1, 40
     CONTROL = 2, 20
-    VISUALIZE = 3, 0
+    VIEW = 3, 0
 
 
 @unique  # id, initial sec
