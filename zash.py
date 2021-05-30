@@ -1,7 +1,12 @@
 import csv
+from modules.decision.authorization import AuthorizationComponent
+from modules.behavior.notification import NotificationComponent
+from modules.decision.activity import ActivityComponent
+from modules.decision.context import ContextComponent
+from modules.decision.ontology import OntologyComponent
+from modules.behavior.configuration import ConfigurationComponent
 import queue
 from datetime import datetime, timedelta
-from markov_zash import MarkovChain
 from enums_zash import *
 from models_zash import *
 
@@ -113,13 +118,6 @@ with open('d6_2m_0tm.csv', newline='') as csvfile:
         if current_state == last_state:
             continue
         current_date = datetime.strptime(row[DATE_COL], '%Y-%m-%d %H:%M:%S')
-        if limit_date is None:
-            limit_date = current_date + \
-                timedelta(days=configuration_component.markov_build_interval)
-        elif activity_component.is_markov_building and current_date > limit_date:
-            activity_component.is_markov_building = False
-            print("Markov Chain stopped building transition matrix at {}".format(
-                current_date))
 
         # room = next(
         #     room for room in act_room if ActivityEnum[row[29].upper()] in room["activities"])
@@ -130,11 +128,6 @@ with open('d6_2m_0tm.csv', newline='') as csvfile:
         #         act_window.get()
         #     act_window.put(act)
         # print(act_window.queue)
-
-        # clean rejects occurred out of interval
-        for user in users:
-            user.rejected = [rej_date for rej_date in user.rejected if current_date -
-                             rej_date < timedelta(hours=configuration_component.block_interval)]
 
         if last_state is not None:
             changes = [(i, e1, e2) for i, (e1, e2) in enumerate(
