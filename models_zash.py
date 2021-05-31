@@ -13,21 +13,17 @@ class Activity:
 
 
 class Context:
-    def __init__(self, access_way: AccessWay, localization: Localization, time: Time, age: Age, group: Group):
+    def __init__(self, access_way: AccessWay, localization: Localization, group: Group):
         self.access_way = access_way
         self.localization = localization
-        self.time = time
-        self.age = age
+        self.time = None # will be computed during request in context component
         self.group = group
 
     def __repr__(self):
-        return "Context[{},{},{},{},{}]".format(str(self.access_way), str(self.localization), str(self.time), str(self.age), str(self.group))
+        return "Context[{},{},{},{}]".format(str(self.access_way), str(self.localization), str(self.time), str(self.group))
 
     def __str__(self):
-        return "Context[{},{},{},{},{}]".format(str(self.access_way), str(self.localization), str(self.time), str(self.age), str(self.group))
-
-    def trust(self):
-        return self.access_way.value[1] + self.localization.value[1] + self.time.value[1] + self.age.value[1] + self.group.value[1]
+        return "Context[{},{},{},{}]".format(str(self.access_way), str(self.localization), str(self.time), str(self.group))
 
 
 class Ontology:
@@ -44,18 +40,19 @@ class Ontology:
 
 
 class User:
-    def __init__(self, id: int, user_level: UserLevel):
+    def __init__(self, id: int, user_level: UserLevel, age: Age):
         self.id = id
         self.user_level = user_level
+        self.age = age
         self.rejected = []
         self.start_interval = None
         self.blocked = False
 
     def __repr__(self):
-        return "User[{},{}]".format(str(self.id), str(self.user_level))
+        return "User[{},{},{}]".format(str(self.id), str(self.user_level), str(self.age))
 
     def __str__(self):
-        return "User[{},{}]".format(str(self.id), str(self.user_level))
+        return "User[{},{},{}]".format(str(self.id), str(self.user_level), str(self.age))
 
 
 class Device:

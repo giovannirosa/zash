@@ -19,18 +19,14 @@ class OntologyComponent:
         print("Ontology Component")
         print("Verify User Level {} with the Action {} on the device class {}".format(
             req.user.user_level, req.action, req.device.device_class))
-        compatible = True
         print(self.configuration_component.ontologies)
         capabilities = next((ontology.capabilities for ontology in self.configuration_component.ontologies if ontology.user_level ==
                                    req.user.user_level and ontology.device_class == req.device.device_class), [])
         print(capabilities)
+        compatible = False
         if req.action in capabilities:
             compatible = True
-        else:
-            compatible = False
-        str_result = 'compatible'
-        if not compatible:
-            str_result = 'incompatible'
+        str_result = 'compatible' if compatible else 'incompatible'
         print("User level {} is {} with the Action {} on the device class {}".format(
             req.user.user_level, str_result, req.action, req.device.device_class))
         return compatible

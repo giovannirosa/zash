@@ -22,7 +22,7 @@ class ActivityEnum(Enum):
 
 
 @unique
-class RequestTime(Enum):
+class Time(Enum):
     MORNING = 1
     AFTERNOON = 2
     NIGHT = 3
@@ -63,7 +63,7 @@ class Localization(Enum):
 
 
 @unique  # id, given sec
-class Time(Enum):
+class TimeClass(Enum):
     COMMOM = 1, 20
     UNCOMMOM = 1, 10
 

@@ -1,15 +1,26 @@
+from datetime import datetime, timedelta
+from modules.behavior.configuration import ConfigurationComponent
+from modules.collection.data import DataComponent
+
+
 class ActivityComponent:
-    def __init__(self):
+    def __init__(self, data_component: DataComponent, configuration_component: ConfigurationComponent):
         self.markov_chain = MarkovChain()
         self.is_markov_building = True
+        self.data_component = data_component
+        self.configuration_component = configuration_component
+        self.limit_date = None
 
     # check next state probability using a Markov Chain
     # updates transition matrix with successful requests
-    def verify_activity(self, current_state, last_state):
+    def verify_activity(self, current_date: datetime):
+        self.check_markov(current_date)
+        current_state = self.data_component.current_state
+        last_state = self.data_component.last_state
         print("Activity Component")
         print("Verify activities")
         print("From: {}".format(last_state))
-        print("To: {}".format(current_state))
+        print("To:   {}".format(current_state))
         if self.is_markov_building:
             self.markov_chain.build_transition(current_state, last_state)
             return True
@@ -22,6 +33,17 @@ class ActivityComponent:
             else:
                 print("Activity is NOT valid!")
                 return False
+
+    # check if markov build time expired
+    def check_markov(self, current_date: datetime):
+        if self.limit_date is None:
+            self.limit_date = current_date + \
+                timedelta(
+                    days=self.configuration_component.build_interval)
+        elif self.is_markov_building and current_date > self.limit_date:
+            self.is_markov_building = False
+            print("Markov Chain stopped building transition matrix at {}".format(
+                current_date))
 
 
 class MarkovChain:

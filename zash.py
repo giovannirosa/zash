@@ -1,4 +1,6 @@
 import csv
+from modules.collection.data import DataComponent
+from modules.collection.device import DeviceComponent
 from modules.decision.authorization import AuthorizationComponent
 from modules.behavior.notification import NotificationComponent
 from modules.decision.activity import ActivityComponent
@@ -16,8 +18,8 @@ NUMBER_OF_DEVICES = 29
 ACTIVITY_COL = 29
 DATE_COL = 30
 
-users = [User(1, UserLevel.ADMIN), User(2, UserLevel.ADULT), User(
-    3, UserLevel.CHILD), User(4, UserLevel.CHILD), User(5, UserLevel.VISITOR)]
+users = [User(1, UserLevel.ADMIN, Age.ADULT), User(2, UserLevel.ADULT, Age.ADULT), User(
+    3, UserLevel.CHILD, Age.TEEN), User(4, UserLevel.CHILD, Age.KID), User(5, UserLevel.VISITOR, Age.ADULT)]
 devices = [Device(1, DeviceClass.NONCRITICAL, Room.BEDROOM, True),  # wardrobe
            Device(2, DeviceClass.NONCRITICAL, Room.LIVINGROOM, True),  # tv
            Device(3, DeviceClass.CRITICAL, Room.KITCHEN, True),  # oven
@@ -92,18 +94,24 @@ admin_noncritical = Ontology(
 ontologies = [visitor_critical, child_critical, adult_critical,
               admin_critical, visitor_noncritical, child_noncritical, adult_noncritical, admin_noncritical]
 
-
+# Behavior Module
 configuration_component = ConfigurationComponent(
     3, 24, 32, devices, users, ontologies)
+notification_component = NotificationComponent(configuration_component)
+
+# Collection Module
+data_component = DataComponent()
+
+# Decision Module
 ontology_component = OntologyComponent(configuration_component)
-context_component = ContextComponent()
-activity_component = ActivityComponent()
-notification_component = NotificationComponent()
+context_component = ContextComponent(configuration_component)
+activity_component = ActivityComponent(data_component, configuration_component)
 authorization_component = AuthorizationComponent(
     configuration_component, ontology_component, context_component, activity_component, notification_component)
 
-
-# Authorization Component
+# Collection Module
+device_component = DeviceComponent(
+    configuration_component, authorization_component, data_component)
 
 
 id_req = 0
@@ -111,11 +119,10 @@ id_req = 0
 with open('d6_2m_0tm.csv', newline='') as csvfile:
     spamreader = csv.reader(csvfile, delimiter=',')
     next(spamreader)
-    last_state = None
-    limit_date = None
     for row in spamreader:
         current_state = list(map(int, row[:NUMBER_OF_DEVICES]))
-        if current_state == last_state:
+
+        if current_state == data_component.last_state:
             continue
         current_date = datetime.strptime(row[DATE_COL], '%Y-%m-%d %H:%M:%S')
 
@@ -129,9 +136,9 @@ with open('d6_2m_0tm.csv', newline='') as csvfile:
         #     act_window.put(act)
         # print(act_window.queue)
 
-        if last_state is not None:
+        if data_component.last_state is not None:
             changes = [(i, e1, e2) for i, (e1, e2) in enumerate(
-                zip(last_state, current_state)) if e1 != e2]
+                zip(data_component.last_state, current_state)) if e1 != e2]
             # print("Changes:")
             # print(changes)
             for change in changes:
@@ -139,9 +146,8 @@ with open('d6_2m_0tm.csv', newline='') as csvfile:
                     print(current_date, act)
                     id_req += 1
                     req = Request(id_req, devices[change[0]], users[0], Context(
-                        AccessWay.PERSONAL, Localization.INTERNAL, Time.COMMOM, Age.ADULT, Group.ALONE), Action.CONTROL)
-                    authorization_component.on_request(
-                        req, current_state, last_state, current_date)
+                        AccessWay.PERSONAL, Localization.INTERNAL, Group.ALONE), Action.CONTROL)
+                    device_component.listen_request(req, current_date)
                     print()
-
-        last_state = current_state
+        else:
+            data_component.last_state = current_state
