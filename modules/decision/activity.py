@@ -14,7 +14,7 @@ class ActivityComponent:
     # check next state probability using a Markov Chain
     # updates transition matrix with successful requests
     def verify_activity(self, current_date: datetime):
-        self.check_markov(current_date)
+        self.check_building(current_date)
         current_state = self.data_component.current_state
         last_state = self.data_component.last_state
         print("Activity Component")
@@ -35,7 +35,7 @@ class ActivityComponent:
                 return False
 
     # check if markov build time expired
-    def check_markov(self, current_date: datetime):
+    def check_building(self, current_date: datetime):
         if self.limit_date is None:
             self.limit_date = current_date + \
                 timedelta(
