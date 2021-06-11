@@ -1,6 +1,6 @@
 import datetime
 from modules.behavior.configuration import ConfigurationComponent
-from enums_zash import Time, TimeClass
+from enums_zash import Action, Time, TimeClass, UserLevel
 from models_zash import Context, Request, User
 import operator
 
@@ -12,11 +12,13 @@ class ContextComponent:
         self.limit_date = None
         self.time_prob_list = []  # {device, times}
         for device in configuration_component.devices:
-            self.time_prob_list.append(
-                {"device": device, "total_occ": 0, "times": [{"time": Time.MORNING, "percentage": 0, "occurrences": 0},
-                                                             {"time": Time.AFTERNOON,
-                                                             "percentage": 0, "occurrences": 0},
-                                                             {"time": Time.NIGHT, "percentage": 0, "occurrences": 0}]})
+            for ul in UserLevel:
+                for act in Action:
+                    self.time_prob_list.append(
+                        {"device": device, "user_level": ul, "action": act, "total_occ": 0, "times": [{"time": Time.MORNING, "percentage": 0, "occurrences": 0},
+                                                                                                      {"time": Time.AFTERNOON,
+                                                                                                      "percentage": 0, "occurrences": 0},
+                                                                                                      {"time": Time.NIGHT, "percentage": 0, "occurrences": 0}]})
 
     # static trust calculation based on expected
     # for [DeviceClass x Action] and [UserLevel x Action]
@@ -25,7 +27,8 @@ class ContextComponent:
         print("Context Component")
         self.calculate_time(req, current_date)
         self.check_building(current_date)
-        print("Verify context {} with {} in {}".format(req.context, req.user, current_date))
+        print("Verify context {} with {} in {}".format(
+            req.context, req.user, current_date))
         if self.is_time_building:
             return True
         expected_device = req.device.device_class.value[1] + \
@@ -36,10 +39,21 @@ class ContextComponent:
         print("Trust level is {} and expected is {}".format(
             calculated, expected))
         if calculated < expected:
-            print("Trust level is BELOW expected!")
-            return False
+            print("Trust level is BELOW expected! Requires proof of identity!")
+            if not self.explicit_authentication(req.user):
+                return False
         print("Trust level is ABOVE expected!")
         return True
+
+    def explicit_authentication(self, user: User):
+        print("Please provide proof of identity:")
+        proof = int(input())
+        if proof != user.id:
+            print("Proof does not match")
+            return False
+        else:
+            print("Proof matches")
+            return True
 
     # check if time build expired
     def check_building(self, current_date: datetime):
@@ -65,11 +79,12 @@ class ContextComponent:
             time = Time.NIGHT
 
         time_prob = next((time_prob for time_prob in self.time_prob_list if time_prob["device"] ==
-                          req.device), None)
+                          req.device and time_prob["user_level"] == req.user.user_level and time_prob["action"] == req.action), None)
 
         self.recalculate_probabilities(time_prob, time)
 
-        max_time = max(time_prob['times'], key=operator.itemgetter('percentage'))
+        max_time = max(time_prob['times'],
+                       key=operator.itemgetter('percentage'))
         if max_time["time"] == time:
             req.context.time = TimeClass.COMMOM
         else:

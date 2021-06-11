@@ -11,6 +11,26 @@ import queue
 from datetime import datetime, timedelta
 from enums_zash import *
 from models_zash import *
+import sys
+
+
+class Logger(object):
+    def __init__(self):
+        self.terminal = sys.stdout
+        self.log = open("sim4.txt", "a")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        # this flush method is needed for python 3 compatibility.
+        # this handles the flush command by doing nothing.
+        # you might want to specify some extra behavior here.
+        pass
+
+
+sys.stdout = Logger()
 
 
 WINDOW_SIZE = 5
@@ -67,7 +87,6 @@ devices = [Device(1, DeviceClass.NONCRITICAL, Room.BEDROOM, True),  # wardrobe
            Device(28, DeviceClass.NONCRITICAL,
                   Room.BATHROOM, True),  # bathroomDoor
            Device(29, DeviceClass.NONCRITICAL, Room.BATHROOM, False)]  # bathroomCarp
-
 
 # act_window = queue.Queue(WINDOW_SIZE)
 # requests = [{"time": "2016-03-03 18:30:31", "req": Request(1, devices[8], users[4], Context(
@@ -151,3 +170,13 @@ with open('d6_2m_0tm.csv', newline='') as csvfile:
                     print()
         else:
             data_component.last_state = current_state
+
+
+admin_users = len(list(filter(lambda user: user.user_level == UserLevel.ADMIN, users)))
+critical_devices = len(list(filter(lambda device: device.device_class == DeviceClass.CRITICAL, devices)))
+
+print("PP = {}".format(1/(admin_users * critical_devices)))
+
+print("RI = {}".format(len(UserLevel) * len(DeviceClass)))
+
+print("SD = {}".format(len(Action) * len(DeviceClass)))
