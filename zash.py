@@ -13,11 +13,16 @@ from enums_zash import *
 from models_zash import *
 import sys
 
+WINDOW_SIZE = 5
+NUMBER_OF_DEVICES = 29
+ACTIVITY_COL = 29
+DATE_COL = 30
+
 
 class Logger(object):
     def __init__(self):
         self.terminal = sys.stdout
-        self.log = open("sim4.txt", "a")
+        self.log = open("logs/sim6.txt", "w")
 
     def write(self, message):
         self.terminal.write(message)
@@ -32,12 +37,6 @@ class Logger(object):
 
 sys.stdout = Logger()
 
-
-WINDOW_SIZE = 5
-NUMBER_OF_DEVICES = 29
-ACTIVITY_COL = 29
-DATE_COL = 30
-
 users = [User(1, UserLevel.ADMIN, Age.ADULT), User(2, UserLevel.ADULT, Age.ADULT), User(
     3, UserLevel.CHILD, Age.TEEN), User(4, UserLevel.CHILD, Age.KID), User(5, UserLevel.VISITOR, Age.ADULT)]
 devices = [Device(1, DeviceClass.NONCRITICAL, Room.BEDROOM, True),  # wardrobe
@@ -45,13 +44,18 @@ devices = [Device(1, DeviceClass.NONCRITICAL, Room.BEDROOM, True),  # wardrobe
            Device(3, DeviceClass.CRITICAL, Room.KITCHEN, True),  # oven
            Device(4, DeviceClass.NONCRITICAL,
                   Room.OFFICE, True),  # officeLight
-           Device(5, DeviceClass.CRITICAL, Room.OFFICE, True),  # officeDoorLock
-           Device(6, DeviceClass.NONCRITICAL, Room.OFFICE, True),  # officeDoor
+           Device(5, DeviceClass.CRITICAL,
+                  Room.OFFICE, True),  # officeDoorLock
+           Device(6, DeviceClass.NONCRITICAL,
+                  Room.OFFICE, True),  # officeDoor
            Device(7, DeviceClass.NONCRITICAL,
                   Room.OFFICE, False),  # officeCarp
-           Device(8, DeviceClass.NONCRITICAL, Room.OFFICE, False),  # office
-           Device(9, DeviceClass.CRITICAL, Room.HOUSE, True),  # mainDoorLock
-           Device(10, DeviceClass.NONCRITICAL, Room.HOUSE, True),  # mainDoor
+           Device(8, DeviceClass.NONCRITICAL,
+                  Room.OFFICE, False),  # office
+           Device(9, DeviceClass.CRITICAL,
+                  Room.HOUSE, True),  # mainDoorLock
+           Device(10, DeviceClass.NONCRITICAL,
+                  Room.HOUSE, True),  # mainDoor
            Device(11, DeviceClass.NONCRITICAL,
                   Room.LIVINGROOM, True),  # livingLight
            Device(12, DeviceClass.NONCRITICAL,
@@ -101,14 +105,13 @@ admin_critical = Ontology(UserLevel.ADMIN, DeviceClass.CRITICAL,
                           adult_critical.capabilities + [Action.MANAGE])
 
 visitor_noncritical = Ontology(UserLevel.VISITOR, DeviceClass.CRITICAL, [
-                               Action.VIEW, Action.CONTROL])
+    Action.VIEW, Action.CONTROL])
 child_noncritical = Ontology(
     UserLevel.CHILD, DeviceClass.NONCRITICAL, visitor_noncritical.capabilities + [])
 adult_noncritical = Ontology(UserLevel.ADULT, DeviceClass.NONCRITICAL,
                              child_noncritical.capabilities + [Action.MANAGE])
 admin_noncritical = Ontology(
     UserLevel.ADMIN, DeviceClass.NONCRITICAL, adult_noncritical.capabilities)
-
 
 ontologies = [visitor_critical, child_critical, adult_critical,
               admin_critical, visitor_noncritical, child_noncritical, adult_noncritical, admin_noncritical]
@@ -124,7 +127,8 @@ data_component = DataComponent()
 # Decision Module
 ontology_component = OntologyComponent(configuration_component)
 context_component = ContextComponent(configuration_component)
-activity_component = ActivityComponent(data_component, configuration_component)
+activity_component = ActivityComponent(
+    data_component, configuration_component)
 authorization_component = AuthorizationComponent(
     configuration_component, ontology_component, context_component, activity_component, notification_component)
 
@@ -132,18 +136,33 @@ authorization_component = AuthorizationComponent(
 device_component = DeviceComponent(
     configuration_component, authorization_component, data_component)
 
-
 id_req = 0
 # 174,809 lines of records, 2 months, 60 days, 1 line per second
-with open('d6_2m_0tm.csv', newline='') as csvfile:
+with open('data/d6_2m_0tm.csv', newline='') as csvfile:
     spamreader = csv.reader(csvfile, delimiter=',')
     next(spamreader)
     for row in spamreader:
-        current_state = list(map(int, row[:NUMBER_OF_DEVICES]))
+        current_date = datetime.strptime(
+            row[DATE_COL], '%Y-%m-%d %H:%M:%S')
+
+        if current_date < datetime.strptime('2016-03-05 11:09:24', '%Y-%m-%d %H:%M:%S'):
+            current_state = list(
+                map(int, row[0:17] + row[18:NUMBER_OF_DEVICES]))
+        else:
+            current_state = list(map(int, row[:NUMBER_OF_DEVICES]))
+            if len(data_component.last_state) == 28:
+                data_component.last_state[17:17] = [0]
 
         if current_state == data_component.last_state:
             continue
-        current_date = datetime.strptime(row[DATE_COL], '%Y-%m-%d %H:%M:%S')
+
+        print('Number of devices current state: {}'.format(len(current_state)))
+        if data_component.last_state:
+            print('Number of devices last state   : {}'.format(len(data_component.last_state)))
+
+        # if row[DATE_COL] == '2016-03-05 11:09:24':
+        #     devices.append(Device(17, DeviceClass.NONCRITICAL,
+        #                           Room.HOUSE, True))  # hallwayLight
 
         # room = next(
         #     room for room in act_room if ActivityEnum[row[29].upper()] in room["activities"])
@@ -161,6 +180,8 @@ with open('d6_2m_0tm.csv', newline='') as csvfile:
             # print("Changes:")
             # print(changes)
             for change in changes:
+                if change[0] == 17 and current_date < datetime.strptime('2016-03-05 11:09:24', '%Y-%m-%d %H:%M:%S'):
+                    continue
                 if devices[change[0]].active:
                     print(current_date, act)
                     id_req += 1
@@ -171,11 +192,16 @@ with open('d6_2m_0tm.csv', newline='') as csvfile:
         else:
             data_component.last_state = current_state
 
+admin_users = len(
+    list(filter(lambda user: user.user_level == UserLevel.ADMIN, users)))
+critical_devices = len(list(
+    filter(lambda device: device.device_class == DeviceClass.CRITICAL, devices)))
 
-admin_users = len(list(filter(lambda user: user.user_level == UserLevel.ADMIN, users)))
-critical_devices = len(list(filter(lambda device: device.device_class == DeviceClass.CRITICAL, devices)))
+print("\nSimulation metrics:")
 
 print("PP = {}".format(1/(admin_users * critical_devices)))
+
+# print("DE = {}".format(29 - 28))
 
 print("RI = {}".format(len(UserLevel) * len(DeviceClass)))
 

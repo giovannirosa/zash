@@ -8,4 +8,5 @@ class NotificationComponent:
 
     def alert_users(self, blocked_user: User):
         for user in self.configuration_component.users:
-            print("{} received message: '{}'".format(user, "{} is blocked!".format(blocked_user)))
+            print("{} received message: '{}'".format(
+                user, "{} is blocked!".format(blocked_user)))

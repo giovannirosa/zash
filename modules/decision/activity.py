@@ -1,6 +1,11 @@
 from datetime import datetime, timedelta
+from models_zash import Request
+from typing import Callable
 from modules.behavior.configuration import ConfigurationComponent
 from modules.collection.data import DataComponent
+
+
+PROB_THRESHOLD = 0.1
 
 
 class ActivityComponent:
@@ -13,7 +18,7 @@ class ActivityComponent:
 
     # check next state probability using a Markov Chain
     # updates transition matrix with successful requests
-    def verify_activity(self, current_date: datetime):
+    def verify_activity(self, req: Request, current_date: datetime, explicit_authentication: Callable):
         self.check_building(current_date)
         current_state = self.data_component.current_state
         last_state = self.data_component.last_state
@@ -21,18 +26,16 @@ class ActivityComponent:
         print("Verify activities")
         print("From: {}".format(last_state))
         print("To:   {}".format(current_state))
-        if self.is_markov_building:
-            self.markov_chain.build_transition(current_state, last_state)
-            return True
-        else:
+        if not self.is_markov_building:
             prob = self.markov_chain.get_probability(current_state, last_state)
-            if prob > 0:
-                self.markov_chain.build_transition(current_state, last_state)
-                print("Activity is valid!")
-                return True
-            else:
-                print("Activity is NOT valid!")
-                return False
+            print('Probability = {}'.format(str(prob)))
+            if prob < PROB_THRESHOLD:
+                print("Activity is NOT valid! Requires proof of identity!")
+                if not explicit_authentication(req, current_date):
+                    return False
+        self.markov_chain.build_transition(current_state, last_state)
+        print("Activity is valid!")
+        return True
 
     # check if markov build time expired
     def check_building(self, current_date: datetime):

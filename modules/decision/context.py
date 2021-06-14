@@ -3,6 +3,7 @@ from modules.behavior.configuration import ConfigurationComponent
 from enums_zash import Action, Time, TimeClass, UserLevel
 from models_zash import Context, Request, User
 import operator
+from typing import Callable
 
 
 class ContextComponent:
@@ -10,7 +11,8 @@ class ContextComponent:
         self.configuration_component = configuration_component
         self.is_time_building = True
         self.limit_date = None
-        self.time_prob_list = []  # {device, times}
+        # {device, user_level, action, total_occ, times}
+        self.time_prob_list = []
         for device in configuration_component.devices:
             for ul in UserLevel:
                 for act in Action:
@@ -23,7 +25,7 @@ class ContextComponent:
     # static trust calculation based on expected
     # for [DeviceClass x Action] and [UserLevel x Action]
     # from [AccessWay, Localization, Time, Age, Group]
-    def verify_context(self, req: Request, current_date: datetime) -> bool:
+    def verify_context(self, req: Request, current_date: datetime, explicit_authentication: Callable) -> bool:
         print("Context Component")
         self.calculate_time(req, current_date)
         self.check_building(current_date)
@@ -40,20 +42,10 @@ class ContextComponent:
             calculated, expected))
         if calculated < expected:
             print("Trust level is BELOW expected! Requires proof of identity!")
-            if not self.explicit_authentication(req.user):
+            if not explicit_authentication(req, current_date):
                 return False
         print("Trust level is ABOVE expected!")
         return True
-
-    def explicit_authentication(self, user: User):
-        print("Please provide proof of identity:")
-        proof = int(input())
-        if proof != user.id:
-            print("Proof does not match")
-            return False
-        else:
-            print("Proof matches")
-            return True
 
     # check if time build expired
     def check_building(self, current_date: datetime):
@@ -75,20 +67,31 @@ class ContextComponent:
             time = Time.MORNING
         elif current_date.time() >= datetime.time(12) and current_date.time() < datetime.time(18):
             time = Time.AFTERNOON
-        elif current_date.time() >= datetime.time(18) and current_date.time() < datetime.time(6):
+        elif (current_date.time() >= datetime.time(18) and current_date.time() <= datetime.time(23, 59, 59)) or \
+                (current_date.time() >= datetime.time(0) and current_date.time() < datetime.time(6)):
             time = Time.NIGHT
+
+        print(current_date.time())
 
         time_prob = next((time_prob for time_prob in self.time_prob_list if time_prob["device"] ==
                           req.device and time_prob["user_level"] == req.user.user_level and time_prob["action"] == req.action), None)
 
         self.recalculate_probabilities(time_prob, time)
 
-        max_time = max(time_prob['times'],
-                       key=operator.itemgetter('percentage'))
-        if max_time["time"] == time:
-            req.context.time = TimeClass.COMMOM
-        else:
+        print(time_prob["times"], time)
+
+        match_time = next(
+            time_rec for time_rec in time_prob["times"] if time_rec["time"] == time)
+        if match_time["percentage"] < 0.2:
             req.context.time = TimeClass.UNCOMMOM
+        else:
+            req.context.time = TimeClass.COMMOM
+        # max_time = max(time_prob['times'],
+        #                key=operator.itemgetter('percentage'))
+        # if max_time["time"] == time:
+        #     req.context.time = TimeClass.COMMOM
+        # else:
+        #     req.context.time = TimeClass.UNCOMMOM
 
     def recalculate_probabilities(self, time_prob: dict, time: Time):
         time_prob["total_occ"] += 1
