@@ -77,5 +77,5 @@ class Age(Enum):
 
 @unique  # id, given sec
 class Group(Enum):
-    TOGETHER = 1, 20
-    ALONE = 2, 10
+    TOGETHER = 1, 10
+    ALONE = 2, 0

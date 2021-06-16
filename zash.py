@@ -22,7 +22,7 @@ DATE_COL = 30
 class Logger(object):
     def __init__(self):
         self.terminal = sys.stdout
-        self.log = open("logs/sim6.txt", "w")
+        self.log = open("logs/sim_{}.txt".format(datetime.today().strftime('%Y-%m-%d-%H-%M-%S')), "w")
 
     def write(self, message):
         self.terminal.write(message)
@@ -139,32 +139,20 @@ device_component = DeviceComponent(
 
 tests = [
     {
-        "req": 2518,  # activity
-        "user": 0,
-        "context": Context(AccessWay.PERSONAL, Localization.INTERNAL, Group.ALONE),
-        "action": Action.CONTROL
-    },
-    # {
-    #     "req": 2435,  # activity
-    #     "user": 0,
-    #     "context": Context(AccessWay.PERSONAL, Localization.INTERNAL, Group.ALONE),
-    #     "action": Action.CONTROL
-    # },
-    # {
-    #     "req": 1480,  # activity
-    #     "user": 0,
-    #     "context": Context(AccessWay.PERSONAL, Localization.INTERNAL, Group.ALONE),
-    #     "action": Action.CONTROL
-    # },
-    {
-        "req": 2457,  # context
-        "user": 0,
+        "req": 1480,  # activity
+        "user": users[1],
         "context": Context(AccessWay.PERSONAL, Localization.EXTERNAL, Group.ALONE),
         "action": Action.CONTROL
     },
     {
+        "req": 2518,  # context
+        "user": users[0],
+        "context": Context(AccessWay.REQUESTED, Localization.EXTERNAL, Group.ALONE),
+        "action": Action.MANAGE
+    },
+    {
         "req": 9,  # ontology
-        "user": 3,
+        "user": users[3],
         "context": Context(AccessWay.PERSONAL, Localization.INTERNAL, Group.ALONE),
         "action": Action.CONTROL
     },
@@ -221,11 +209,11 @@ with open('data/d6_2m_0tm.csv', newline='') as csvfile:
                 if devices[change[0]].active:
                     print(current_date, act)
                     id_req += 1
-                    test = next(test for test in tests if test["req"] == id_req, None)
+                    test = next((test for test in tests if test["req"] == id_req), None)
                     req = Request(id_req, devices[change[0]], users[0], Context(
                             AccessWay.PERSONAL, Localization.INTERNAL, Group.ALONE), Action.CONTROL)
                     if test:
-                        req.user = users[test["user"]]
+                        req.user = test["user"]
                         req.context = test["context"]
                         req.action = test["action"]
                     device_component.listen_request(req, current_date)

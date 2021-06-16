@@ -29,15 +29,16 @@ class ContextComponent:
         print("Context Component")
         self.calculate_time(req, current_date)
         self.check_building(current_date)
+        if self.is_time_building:
+            print("Time probability is still building")
+            return True
         print("Verify context {} with {} in {}".format(
             req.context, req.user, current_date))
-        if self.is_time_building:
-            return True
         expected_device = req.device.device_class.value[1] + \
             req.action.value[1]
         expected_user = req.user.user_level.value[1] + req.action.value[1]
-        expected = max(expected_device, expected_user)
-        calculated = self.calculate_trust(req.context, req.user)
+        expected = min(max(expected_device, expected_user), 100)
+        calculated = min(self.calculate_trust(req.context, req.user), 100)
         print("Trust level is {} and expected is {}".format(
             calculated, expected))
         if calculated < expected:
@@ -71,18 +72,14 @@ class ContextComponent:
                 (current_date.time() >= datetime.time(0) and current_date.time() < datetime.time(6)):
             time = Time.NIGHT
 
-        print(current_date.time())
-
         time_prob = next((time_prob for time_prob in self.time_prob_list if time_prob["device"] ==
                           req.device and time_prob["user_level"] == req.user.user_level and time_prob["action"] == req.action), None)
 
         self.recalculate_probabilities(time_prob, time)
 
-        print(time_prob["times"], time)
-
         match_time = next(
             time_rec for time_rec in time_prob["times"] if time_rec["time"] == time)
-        if match_time["percentage"] < 0.2:
+        if match_time["percentage"] < 0.3:
             req.context.time = TimeClass.UNCOMMOM
         else:
             req.context.time = TimeClass.COMMOM

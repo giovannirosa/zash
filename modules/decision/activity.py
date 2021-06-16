@@ -23,18 +23,20 @@ class ActivityComponent:
         current_state = self.data_component.current_state
         last_state = self.data_component.last_state
         print("Activity Component")
-        print("Verify activities")
-        print("From: {}".format(last_state))
-        print("To:   {}".format(current_state))
         if not self.is_markov_building:
+            print("Verify activities")
+            print("From: {}".format(last_state))
+            print("To:   {}".format(current_state))
             prob = self.markov_chain.get_probability(current_state, last_state)
             print('Probability = {}'.format(str(prob)))
             if prob < PROB_THRESHOLD:
                 print("Activity is NOT valid! Requires proof of identity!")
                 if not explicit_authentication(req, current_date):
                     return False
+            print("Activity is valid!")
+        else:
+            print("Markov Chain is still building")
         self.markov_chain.build_transition(current_state, last_state)
-        print("Activity is valid!")
         return True
 
     # check if markov build time expired

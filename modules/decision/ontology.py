@@ -22,7 +22,6 @@ class OntologyComponent:
         print(self.configuration_component.ontologies)
         capabilities = next((ontology.capabilities for ontology in self.configuration_component.ontologies if ontology.user_level ==
                                    req.user.user_level and ontology.device_class == req.device.device_class), [])
-        print(capabilities)
         compatible = False
         if req.action in capabilities:
             compatible = True
