@@ -136,6 +136,40 @@ authorization_component = AuthorizationComponent(
 device_component = DeviceComponent(
     configuration_component, authorization_component, data_component)
 
+
+tests = [
+    {
+        "req": 2518,  # activity
+        "user": 0,
+        "context": Context(AccessWay.PERSONAL, Localization.INTERNAL, Group.ALONE),
+        "action": Action.CONTROL
+    },
+    # {
+    #     "req": 2435,  # activity
+    #     "user": 0,
+    #     "context": Context(AccessWay.PERSONAL, Localization.INTERNAL, Group.ALONE),
+    #     "action": Action.CONTROL
+    # },
+    # {
+    #     "req": 1480,  # activity
+    #     "user": 0,
+    #     "context": Context(AccessWay.PERSONAL, Localization.INTERNAL, Group.ALONE),
+    #     "action": Action.CONTROL
+    # },
+    {
+        "req": 2457,  # context
+        "user": 0,
+        "context": Context(AccessWay.PERSONAL, Localization.EXTERNAL, Group.ALONE),
+        "action": Action.CONTROL
+    },
+    {
+        "req": 9,  # ontology
+        "user": 3,
+        "context": Context(AccessWay.PERSONAL, Localization.INTERNAL, Group.ALONE),
+        "action": Action.CONTROL
+    },
+]
+
 id_req = 0
 # 174,809 lines of records, 2 months, 60 days, 1 line per second
 with open('data/d6_2m_0tm.csv', newline='') as csvfile:
@@ -145,20 +179,20 @@ with open('data/d6_2m_0tm.csv', newline='') as csvfile:
         current_date = datetime.strptime(
             row[DATE_COL], '%Y-%m-%d %H:%M:%S')
 
-        if current_date < datetime.strptime('2016-03-05 11:09:24', '%Y-%m-%d %H:%M:%S'):
-            current_state = list(
-                map(int, row[0:17] + row[18:NUMBER_OF_DEVICES]))
-        else:
-            current_state = list(map(int, row[:NUMBER_OF_DEVICES]))
-            if len(data_component.last_state) == 28:
-                data_component.last_state[17:17] = [0]
+        # if current_date < datetime.strptime('2016-03-05 11:09:24', '%Y-%m-%d %H:%M:%S'):
+        #     current_state = list(
+        #         map(int, row[0:17] + row[18:NUMBER_OF_DEVICES]))
+        # else:
+        current_state = list(map(int, row[:NUMBER_OF_DEVICES]))
+        # if len(data_component.last_state) == 28:
+        #     data_component.last_state[17:17] = [0]
 
         if current_state == data_component.last_state:
             continue
 
-        print('Number of devices current state: {}'.format(len(current_state)))
-        if data_component.last_state:
-            print('Number of devices last state   : {}'.format(len(data_component.last_state)))
+        # print('Number of devices current state: {}'.format(len(current_state)))
+        # if data_component.last_state:
+        #     print('Number of devices last state   : {}'.format(len(data_component.last_state)))
 
         # if row[DATE_COL] == '2016-03-05 11:09:24':
         #     devices.append(Device(17, DeviceClass.NONCRITICAL,
@@ -180,13 +214,20 @@ with open('data/d6_2m_0tm.csv', newline='') as csvfile:
             # print("Changes:")
             # print(changes)
             for change in changes:
-                if change[0] == 17 and current_date < datetime.strptime('2016-03-05 11:09:24', '%Y-%m-%d %H:%M:%S'):
-                    continue
+                # if change[0] == 17 and current_date < datetime.strptime('2016-03-05 11:09:24', '%Y-%m-%d %H:%M:%S'):
+                #     continue
+                if change[0] == 8:
+                    print('Main Door Lock')
                 if devices[change[0]].active:
                     print(current_date, act)
                     id_req += 1
+                    test = next(test for test in tests if test["req"] == id_req, None)
                     req = Request(id_req, devices[change[0]], users[0], Context(
-                        AccessWay.PERSONAL, Localization.INTERNAL, Group.ALONE), Action.CONTROL)
+                            AccessWay.PERSONAL, Localization.INTERNAL, Group.ALONE), Action.CONTROL)
+                    if test:
+                        req.user = users[test["user"]]
+                        req.context = test["context"]
+                        req.action = test["action"]
                     device_component.listen_request(req, current_date)
                     print()
         else:
