@@ -228,7 +228,7 @@ critical_devices = len(list(
 
 print("\nSimulation metrics:")
 
-print("PP = {}".format(admin_users * critical_devices))
+print("PR = {}".format(admin_users * critical_devices))
 
 # print("DE = {}".format(29 - 28))
 
