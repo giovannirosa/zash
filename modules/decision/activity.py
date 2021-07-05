@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from modules.audit.audit import AuditComponent, AuditEvent
 from models_zash import Request
 from typing import Callable
 from modules.behavior.configuration import ConfigurationComponent
@@ -9,15 +10,17 @@ PROB_THRESHOLD = 0.1
 
 
 class ActivityComponent:
-    def __init__(self, data_component: DataComponent, configuration_component: ConfigurationComponent):
+    def __init__(self, data_component: DataComponent, configuration_component: ConfigurationComponent, audit_component: AuditComponent):
         self.markov_chain = MarkovChain()
         self.is_markov_building = True
         self.data_component = data_component
         self.configuration_component = configuration_component
         self.limit_date = None
+        self.audit_component = audit_component
 
     # check next state probability using a Markov Chain
     # updates transition matrix with successful requests
+
     def verify_activity(self, req: Request, current_date: datetime, explicit_authentication: Callable):
         self.check_building(current_date)
         current_state = self.data_component.current_state
@@ -30,6 +33,8 @@ class ActivityComponent:
             prob = self.markov_chain.get_probability(current_state, last_state)
             print('Probability = {}'.format(str(prob)))
             if prob < PROB_THRESHOLD:
+                self.audit_component.activity_fail.append(
+                    AuditEvent(current_date, req))
                 print("Activity is NOT valid! Requires proof of identity!")
                 if not explicit_authentication(req, current_date):
                     return False

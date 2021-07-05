@@ -1,4 +1,5 @@
 import csv
+from modules.audit.audit import AuditComponent
 from modules.collection.data import DataComponent
 from modules.collection.device import DeviceComponent
 from modules.decision.authorization import AuthorizationComponent
@@ -12,17 +13,22 @@ from datetime import datetime, timedelta
 from enums_zash import *
 from models_zash import *
 import sys
+import os
 
 WINDOW_SIZE = 5
 NUMBER_OF_DEVICES = 29
 ACTIVITY_COL = 29
 DATE_COL = 30
 
+log_id = datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
+dir = "logs/sim_{}".format(log_id)
+os.mkdir(dir)
+
 
 class Logger(object):
     def __init__(self):
         self.terminal = sys.stdout
-        self.log = open("logs/sim_{}.txt".format(datetime.today().strftime('%Y-%m-%d-%H-%M-%S')), "w")
+        self.log = open(os.path.join(dir, "sim_{}.txt".format(log_id)), "w")
 
     def write(self, message):
         self.terminal.write(message)
@@ -45,7 +51,7 @@ devices = [Device(1, DeviceClass.NONCRITICAL, Room.BEDROOM, True),  # wardrobe
            Device(4, DeviceClass.NONCRITICAL,
                   Room.OFFICE, True),  # officeLight
            Device(5, DeviceClass.CRITICAL,
-                  Room.OFFICE, True),  # officeDoorLock
+                  Room.OFFICE, True),  # oopenfficeDoorLock
            Device(6, DeviceClass.NONCRITICAL,
                   Room.OFFICE, True),  # officeDoor
            Device(7, DeviceClass.NONCRITICAL,
@@ -116,6 +122,9 @@ admin_noncritical = Ontology(
 ontologies = [visitor_critical, child_critical, adult_critical,
               admin_critical, visitor_noncritical, child_noncritical, adult_noncritical, admin_noncritical]
 
+# Audit Module
+audit_module = AuditComponent()
+
 # Behavior Module
 configuration_component = ConfigurationComponent(
     3, 24, 32, devices, users, ontologies)
@@ -125,37 +134,37 @@ notification_component = NotificationComponent(configuration_component)
 data_component = DataComponent()
 
 # Decision Module
-ontology_component = OntologyComponent(configuration_component)
-context_component = ContextComponent(configuration_component)
+ontology_component = OntologyComponent(configuration_component, audit_module)
+context_component = ContextComponent(configuration_component, audit_module)
 activity_component = ActivityComponent(
-    data_component, configuration_component)
+    data_component, configuration_component, audit_module)
 authorization_component = AuthorizationComponent(
-    configuration_component, ontology_component, context_component, activity_component, notification_component)
+    configuration_component, ontology_component, context_component, activity_component, notification_component, audit_module)
 
 # Collection Module
 device_component = DeviceComponent(
-    configuration_component, authorization_component, data_component)
+    configuration_component, authorization_component, data_component, audit_module)
 
 
 tests = [
-    {
-        "req": 1480,  # activity
-        "user": users[1],
-        "context": Context(AccessWay.PERSONAL, Localization.EXTERNAL, Group.ALONE),
-        "action": Action.CONTROL
-    },
-    {
-        "req": 2518,  # context
-        "user": users[0],
-        "context": Context(AccessWay.REQUESTED, Localization.EXTERNAL, Group.ALONE),
-        "action": Action.MANAGE
-    },
-    {
-        "req": 9,  # ontology
-        "user": users[3],
-        "context": Context(AccessWay.PERSONAL, Localization.INTERNAL, Group.ALONE),
-        "action": Action.CONTROL
-    },
+    # {
+    #     "req": 1480,  # activity
+    #     "user": users[1],
+    #     "context": Context(AccessWay.PERSONAL, Localization.EXTERNAL, Group.ALONE),
+    #     "action": Action.CONTROL
+    # },
+    # {
+    #     "req": 2518,  # context
+    #     "user": users[0],
+    #     "context": Context(AccessWay.REQUESTED, Localization.EXTERNAL, Group.ALONE),
+    #     "action": Action.MANAGE
+    # },
+    # {
+    #     "req": 9,  # ontology
+    #     "user": users[3],
+    #     "context": Context(AccessWay.PERSONAL, Localization.INTERNAL, Group.ALONE),
+    #     "action": Action.CONTROL
+    # },
 ]
 
 id_req = 0
@@ -204,20 +213,21 @@ with open('data/d6_2m_0tm.csv', newline='') as csvfile:
             for change in changes:
                 # if change[0] == 17 and current_date < datetime.strptime('2016-03-05 11:09:24', '%Y-%m-%d %H:%M:%S'):
                 #     continue
-                if change[0] == 8:
-                    print('Main Door Lock')
-                if devices[change[0]].active:
-                    print(current_date, act)
-                    id_req += 1
-                    test = next((test for test in tests if test["req"] == id_req), None)
-                    req = Request(id_req, devices[change[0]], users[0], Context(
-                            AccessWay.PERSONAL, Localization.INTERNAL, Group.ALONE), Action.CONTROL)
-                    if test:
-                        req.user = test["user"]
-                        req.context = test["context"]
-                        req.action = test["action"]
-                    device_component.listen_request(req, current_date)
-                    print()
+                # if change[0] == 8:
+                #     print('Main Door Lock')
+                # if devices[change[0]].active:
+                print(current_date, act)
+                id_req += 1
+                test = next(
+                    (test for test in tests if test["req"] == id_req), None)
+                req = Request(id_req, devices[change[0]], users[0], Context(
+                    AccessWay.PERSONAL, Localization.INTERNAL, Group.ALONE), Action.CONTROL)
+                if test:
+                    req.user = test["user"]
+                    req.context = test["context"]
+                    req.action = test["action"]
+                device_component.listen_request(req, current_date)
+                print()
         else:
             data_component.last_state = current_state
 
@@ -235,3 +245,49 @@ print("PR = {}".format(admin_users * critical_devices))
 print("RI = {}".format(len(UserLevel) * len(DeviceClass)))
 
 print("SD = {}".format(len(Action) * len(DeviceClass)))
+
+with open(os.path.join(dir, "blocks_{}.txt".format(log_id)), "w") as writer:
+    writer.writelines([str(event) for event in audit_module.blocks])
+
+with open(os.path.join(dir, "ontology_fail_{}.txt".format(log_id)), "w") as writer:
+    writer.writelines([str(event) for event in audit_module.ontology_fail])
+
+with open(os.path.join(dir, "context_fail_{}.txt".format(log_id)), "w") as writer:
+    writer.writelines([str(event) for event in audit_module.context_fail])
+
+with open(os.path.join(dir, "activity_fail_{}.txt".format(log_id)), "w") as writer:
+    writer.writelines([str(event) for event in audit_module.activity_fail])
+
+with open(os.path.join(dir, "valid_proofs_{}.txt".format(log_id)), "w") as writer:
+    writer.writelines([str(event) for event in audit_module.valid_proofs])
+
+with open(os.path.join(dir, "invalid_proofs_{}.txt".format(log_id)), "w") as writer:
+    writer.writelines([str(event) for event in audit_module.invalid_proofs])
+
+req_number = audit_module.req_number
+
+
+def percentage(number, total):
+    return "{}%".format(str(round(number / total * 100, 2)))
+
+
+print("BLOCKS = {}".format(len(audit_module.blocks)))
+
+ontology_fail = len(audit_module.ontology_fail)
+print("ONTOLOGY FAILS = {} ({})".format(
+    ontology_fail, percentage(ontology_fail, req_number)))
+
+context_fail = len(audit_module.context_fail)
+print("CONTEXT FAILS = {} ({})".format(
+    context_fail, percentage(context_fail, req_number)))
+
+activity_fail = len(audit_module.activity_fail)
+print("ACTIVITY FAILS = {} ({})".format(
+    activity_fail, percentage(activity_fail, req_number)))
+
+valid_proofs = len(audit_module.valid_proofs)
+invalid_proofs = len(audit_module.invalid_proofs)
+print("VALID PROOFS = {} ({})".format(valid_proofs, percentage(
+    valid_proofs, valid_proofs + invalid_proofs)))
+print("INVALID PROOFS = {} ({})".format(invalid_proofs, percentage(
+    invalid_proofs, valid_proofs + invalid_proofs)))

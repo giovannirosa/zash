@@ -1,0 +1,15 @@
+2016-02-01 08:00:02 ActivityEnum.SLEEP
+
+2016-02-01 08:00:11 ActivityEnum.SLEEP
+Authorization Component
+Processing Request: Request[2,Device[22,DeviceClass.NONCRITICAL,Room.BEDROOM],User[1,UserLevel.ADMIN,Age.ADULT],Context[AccessWay.PERSONAL,Localization.INTERNAL,None,Group.ALONE],Action.CONTROL]
+Ontology Component
+Verify User Level UserLevel.ADMIN with the Action Action.CONTROL on the device class DeviceClass.NONCRITICAL
+[Ontology[UserLevel.VISITOR,DeviceClass.CRITICAL,[]], Ontology[UserLevel.CHILD,DeviceClass.CRITICAL,[<Action.VIEW: (3, 0)>]], Ontology[UserLevel.ADULT,DeviceClass.CRITICAL,[<Action.VIEW: (3, 0)>, <Action.CONTROL: (2, 20)>]], Ontology[UserLevel.ADMIN,DeviceClass.CRITICAL,[<Action.VIEW: (3, 0)>, <Action.CONTROL: (2, 20)>, <Action.MANAGE: (1, 40)>]], Ontology[UserLevel.VISITOR,DeviceClass.CRITICAL,[<Action.VIEW: (3, 0)>, <Action.CONTROL: (2, 20)>]], Ontology[UserLevel.CHILD,DeviceClass.NONCRITICAL,[<Action.VIEW: (3, 0)>, <Action.CONTROL: (2, 20)>]], Ontology[UserLevel.ADULT,DeviceClass.NONCRITICAL,[<Action.VIEW: (3, 0)>, <Action.CONTROL: (2, 20)>, <Action.MANAGE: (1, 40)>]], Ontology[UserLevel.ADMIN,DeviceClass.NONCRITICAL,[<Action.VIEW: (3, 0)>, <Action.CONTROL: (2, 20)>, <Action.MANAGE: (1, 40)>]]]
+User level UserLevel.ADMIN is compatible with the Action Action.CONTROL on the device class DeviceClass.NONCRITICAL
+Context Component
+Time probability is still building
+Verify context Context[AccessWay.PERSONAL,Localization.INTERNAL,TimeClass.COMMOM,Group.ALONE] with User[1,UserLevel.ADMIN,Age.ADULT] in 2016-02-01 08:00:11
+Trust level is 80 and expected is 90
+Trust level is BELOW expected! Requires proof of identity!
+Please provide proof of identity:

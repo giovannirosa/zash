@@ -58,7 +58,7 @@ class AccessWay(Enum):
 
 @unique  # id, given sec
 class Localization(Enum):
-    INTERNAL = 1, 20
+    INTERNAL = 1, 30
     EXTERNAL = 2, 10
 
 

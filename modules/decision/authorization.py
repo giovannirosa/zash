@@ -1,3 +1,4 @@
+from modules.audit.audit import AuditComponent, AuditEvent
 from modules.behavior.notification import NotificationComponent
 from modules.decision.context import ContextComponent
 from modules.decision.activity import ActivityComponent
@@ -11,12 +12,13 @@ from typing import Callable
 class AuthorizationComponent:
     def __init__(self, configuration_component: ConfigurationComponent, ontology_component: OntologyComponent,
                  context_component: ContextComponent, activity_component: ActivityComponent,
-                 notification_component: NotificationComponent):
+                 notification_component: NotificationComponent, audit_component: AuditComponent):
         self.configuration_component = configuration_component
         self.ontology_component = ontology_component
         self.context_component = context_component
         self.activity_component = activity_component
         self.notification_component = notification_component
+        self.audit_component = audit_component
 
     # checks for:
     #   - Ontology Component
@@ -31,13 +33,15 @@ class AuthorizationComponent:
         if req.user.blocked:
             print("USER IS BLOCKED - Request is NOT authorized!")
             return False
-        if not self.ontology_component.verify_ontology(req) or \
+        if not self.ontology_component.verify_ontology(req, current_date) or \
                 not self.context_component.verify_context(req, current_date, explicit_authentication) or \
                 not self.activity_component.verify_activity(req, current_date, explicit_authentication):
             req.user.rejected.append(current_date)
             print("User have now {} rejected requests!".format(
                 len(req.user.rejected)))
             if len(req.user.rejected) > self.configuration_component.block_threshold:
+                self.audit_component.blocks.append(
+                    AuditEvent(current_date, req))
                 req.user.blocked = True
                 print("{} is blocked!".format(req.user))
                 self.notification_component.alert_users(req.user)

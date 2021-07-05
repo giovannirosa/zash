@@ -1,4 +1,5 @@
 import datetime
+from modules.audit.audit import AuditComponent, AuditEvent
 from modules.behavior.configuration import ConfigurationComponent
 from enums_zash import Action, Time, TimeClass, UserLevel
 from models_zash import Context, Request, User
@@ -7,10 +8,11 @@ from typing import Callable
 
 
 class ContextComponent:
-    def __init__(self, configuration_component: ConfigurationComponent) -> None:
+    def __init__(self, configuration_component: ConfigurationComponent, audit_component: AuditComponent) -> None:
         self.configuration_component = configuration_component
         self.is_time_building = True
         self.limit_date = None
+        self.audit_component = audit_component
         # {device, user_level, action, total_occ, times}
         self.time_prob_list = []
         for device in configuration_component.devices:
@@ -31,7 +33,7 @@ class ContextComponent:
         self.check_building(current_date)
         if self.is_time_building:
             print("Time probability is still building")
-            return True
+            req.context.time = TimeClass.COMMOM
         print("Verify context {} with {} in {}".format(
             req.context, req.user, current_date))
         expected_device = req.device.device_class.value[1] + \
@@ -42,6 +44,8 @@ class ContextComponent:
         print("Trust level is {} and expected is {}".format(
             calculated, expected))
         if calculated < expected:
+            self.audit_component.context_fail.append(
+                AuditEvent(current_date, req))
             print("Trust level is BELOW expected! Requires proof of identity!")
             if not explicit_authentication(req, current_date):
                 return False
