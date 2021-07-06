@@ -1,0 +1,1 @@
+2016-02-01 08:01:29 - Request[7,Device[26,Bathroom Light,DeviceClass.NONCRITICAL,Room.BATHROOM],User[5,UserLevel.VISITOR,Age.ADULT],Context[AccessWay.PERSONAL,Localization.INTERNAL,None,Group.ALONE],Action.CONTROL]

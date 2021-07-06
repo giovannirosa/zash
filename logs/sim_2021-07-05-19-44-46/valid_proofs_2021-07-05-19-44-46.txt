@@ -1,0 +1,6 @@
+2016-03-05 19:30:26 - Request[2240,Device[9,Main Door Lock,DeviceClass.CRITICAL,Room.HOUSE],User[2,UserLevel.ADULT,Age.ADULT],Context[AccessWay.PERSONAL,Localization.INTERNAL,TimeClass.COMMOM,Group.ALONE],Action.CONTROL]
+2016-03-06 19:30:18 - Request[2302,Device[9,Main Door Lock,DeviceClass.CRITICAL,Room.HOUSE],User[2,UserLevel.ADULT,Age.ADULT],Context[AccessWay.PERSONAL,Localization.INTERNAL,TimeClass.COMMOM,Group.ALONE],Action.CONTROL]
+2016-03-12 10:03:23 - Request[2677,Device[15,Kitchen Door,DeviceClass.NONCRITICAL,Room.KITCHEN],User[2,UserLevel.ADULT,Age.ADULT],Context[AccessWay.PERSONAL,Localization.INTERNAL,TimeClass.COMMOM,Group.ALONE],Action.CONTROL]
+2016-03-20 10:03:23 - Request[3187,Device[15,Kitchen Door,DeviceClass.NONCRITICAL,Room.KITCHEN],User[2,UserLevel.ADULT,Age.ADULT],Context[AccessWay.PERSONAL,Localization.INTERNAL,TimeClass.COMMOM,Group.ALONE],Action.CONTROL]
+2016-03-27 11:03:23 - Request[3671,Device[15,Kitchen Door,DeviceClass.NONCRITICAL,Room.KITCHEN],User[2,UserLevel.ADULT,Age.ADULT],Context[AccessWay.PERSONAL,Localization.INTERNAL,TimeClass.COMMOM,Group.ALONE],Action.CONTROL]
+2016-03-27 19:30:26 - Request[3698,Device[9,Main Door Lock,DeviceClass.CRITICAL,Room.HOUSE],User[2,UserLevel.ADULT,Age.ADULT],Context[AccessWay.PERSONAL,Localization.INTERNAL,TimeClass.COMMOM,Group.ALONE],Action.CONTROL]

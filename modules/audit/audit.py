@@ -12,6 +12,8 @@ class AuditComponent:
         self.valid_proofs = []
         self.invalid_proofs = []
         self.req_number = 0
+        self.req_granted = 0
+        self.req_refused = 0
 
 
 class AuditEvent:
@@ -20,7 +22,7 @@ class AuditEvent:
         self.req = req
 
     def __repr__(self):
-        return "{} - {}".format(str(self.time), str(self.req))
+        return "{} - {}\n".format(str(self.time), str(self.req))
 
     def __str__(self):
-        return "{} - {}".format(str(self.time), str(self.req))
+        return "{} - {}\n".format(str(self.time), str(self.req))

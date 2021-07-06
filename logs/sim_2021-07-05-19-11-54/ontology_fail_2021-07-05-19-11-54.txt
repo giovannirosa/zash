@@ -1,0 +1,4 @@
+2016-02-01 08:00:11 - Request[2,Device[22,Bedroom Door,DeviceClass.NONCRITICAL,Room.BEDROOM],User[5,UserLevel.VISITOR,Age.ADULT],Context[AccessWay.PERSONAL,Localization.INTERNAL,None,Group.ALONE],Action.CONTROL]
+2016-02-01 08:00:15 - Request[4,Device[28,Bathroom Door,DeviceClass.NONCRITICAL,Room.BATHROOM],User[5,UserLevel.VISITOR,Age.ADULT],Context[AccessWay.PERSONAL,Localization.INTERNAL,None,Group.ALONE],Action.CONTROL]
+2016-02-01 08:00:20 - Request[6,Device[26,Bathroom Light,DeviceClass.NONCRITICAL,Room.BATHROOM],User[5,UserLevel.VISITOR,Age.ADULT],Context[AccessWay.PERSONAL,Localization.INTERNAL,None,Group.ALONE],Action.CONTROL]
+2016-02-01 08:01:29 - Request[7,Device[26,Bathroom Light,DeviceClass.NONCRITICAL,Room.BATHROOM],User[5,UserLevel.VISITOR,Age.ADULT],Context[AccessWay.PERSONAL,Localization.INTERNAL,None,Group.ALONE],Action.CONTROL]

@@ -31,6 +31,7 @@ class AuthorizationComponent:
         print("Processing Request: {}".format(str(req)))
         self.check_users(current_date)
         if req.user.blocked:
+            self.audit_component.req_refused += 1
             print("USER IS BLOCKED - Request is NOT authorized!")
             return False
         if not self.ontology_component.verify_ontology(req, current_date) or \
@@ -45,8 +46,10 @@ class AuthorizationComponent:
                 req.user.blocked = True
                 print("{} is blocked!".format(req.user))
                 self.notification_component.alert_users(req.user)
+            self.audit_component.req_refused += 1
             print("Request is NOT authorized!")
             return False
+        self.audit_component.req_granted += 1
         print("Request is authorized!")
         return True
 

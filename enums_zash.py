@@ -65,7 +65,7 @@ class Localization(Enum):
 @unique  # id, given sec
 class TimeClass(Enum):
     COMMOM = 1, 20
-    UNCOMMOM = 1, 10
+    UNCOMMOM = 2, 10
 
 
 @unique  # id, given sec

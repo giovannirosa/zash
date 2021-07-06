@@ -45,58 +45,61 @@ sys.stdout = Logger()
 
 users = [User(1, UserLevel.ADMIN, Age.ADULT), User(2, UserLevel.ADULT, Age.ADULT), User(
     3, UserLevel.CHILD, Age.TEEN), User(4, UserLevel.CHILD, Age.KID), User(5, UserLevel.VISITOR, Age.ADULT)]
-devices = [Device(1, DeviceClass.NONCRITICAL, Room.BEDROOM, True),  # wardrobe
-           Device(2, DeviceClass.NONCRITICAL, Room.LIVINGROOM, True),  # tv
-           Device(3, DeviceClass.CRITICAL, Room.KITCHEN, True),  # oven
-           Device(4, DeviceClass.NONCRITICAL,
+devices = [Device(1, "Wardrobe", DeviceClass.NONCRITICAL, Room.BEDROOM, True),  # wardrobe
+           Device(2, "TV", DeviceClass.NONCRITICAL,
+                  Room.LIVINGROOM, True),  # tv
+           Device(3, "Oven", DeviceClass.CRITICAL, Room.KITCHEN, True),  # oven
+           Device(4, "Office Light", DeviceClass.NONCRITICAL,
                   Room.OFFICE, True),  # officeLight
-           Device(5, DeviceClass.CRITICAL,
-                  Room.OFFICE, True),  # oopenfficeDoorLock
-           Device(6, DeviceClass.NONCRITICAL,
+           Device(5, "Office Door Lock", DeviceClass.CRITICAL,
+                  Room.OFFICE, True),  # officeDoorLock
+           Device(6, "Office Door", DeviceClass.NONCRITICAL,
                   Room.OFFICE, True),  # officeDoor
-           Device(7, DeviceClass.NONCRITICAL,
+           Device(7, "Office Carpet", DeviceClass.NONCRITICAL,
                   Room.OFFICE, False),  # officeCarp
-           Device(8, DeviceClass.NONCRITICAL,
+           Device(8, "Office", DeviceClass.NONCRITICAL,
                   Room.OFFICE, False),  # office
-           Device(9, DeviceClass.CRITICAL,
+           Device(9, "Main Door Lock", DeviceClass.CRITICAL,
                   Room.HOUSE, True),  # mainDoorLock
-           Device(10, DeviceClass.NONCRITICAL,
+           Device(10, "Main Door", DeviceClass.NONCRITICAL,
                   Room.HOUSE, True),  # mainDoor
-           Device(11, DeviceClass.NONCRITICAL,
+           Device(11, "Living Light", DeviceClass.NONCRITICAL,
                   Room.LIVINGROOM, True),  # livingLight
-           Device(12, DeviceClass.NONCRITICAL,
+           Device(12, "Living Carpet", DeviceClass.NONCRITICAL,
                   Room.LIVINGROOM, False),  # livingCarp
-           Device(13, DeviceClass.NONCRITICAL,
+           Device(13, "Kitchen Light", DeviceClass.NONCRITICAL,
                   Room.KITCHEN, True),  # kitchenLight
-           Device(14, DeviceClass.CRITICAL,
+           Device(14, "Kitchen Door Lock", DeviceClass.CRITICAL,
                   Room.KITCHEN, True),  # kitchenDoorLock
-           Device(15, DeviceClass.NONCRITICAL,
+           Device(15, "Kitchen Door", DeviceClass.NONCRITICAL,
                   Room.KITCHEN, True),  # kitchenDoor
-           Device(16, DeviceClass.NONCRITICAL,
+           Device(16, "Kitchen Carpet", DeviceClass.NONCRITICAL,
                   Room.KITCHEN, False),  # kitchenCarp
-           Device(17, DeviceClass.NONCRITICAL,
+           Device(17, "Hallway Light", DeviceClass.NONCRITICAL,
                   Room.HOUSE, True),  # hallwayLight
-           Device(18, DeviceClass.CRITICAL, Room.KITCHEN, True),  # fridge
-           Device(19, DeviceClass.NONCRITICAL,
+           Device(18, "Fridge", DeviceClass.CRITICAL,
+                  Room.KITCHEN, True),  # fridge
+           Device(19, "Couch", DeviceClass.NONCRITICAL,
                   Room.LIVINGROOM, False),  # couch
-           Device(20, DeviceClass.NONCRITICAL,
+           Device(20, "Bedroom Light", DeviceClass.NONCRITICAL,
                   Room.BEDROOM, True),  # bedroomLight
-           Device(21, DeviceClass.CRITICAL,
+           Device(21, "Bedroom Door Lock", DeviceClass.CRITICAL,
                   Room.BEDROOM, True),  # bedroomDoorLock
-           Device(22, DeviceClass.NONCRITICAL,
+           Device(22, "Bedroom Door", DeviceClass.NONCRITICAL,
                   Room.BEDROOM, True),  # bedroomDoor
-           Device(23, DeviceClass.NONCRITICAL,
+           Device(23, "Bedroom Carpet", DeviceClass.NONCRITICAL,
                   Room.BEDROOM, False),  # bedroomCarp
-           Device(24, DeviceClass.NONCRITICAL,
+           Device(24, "Bed Table Lamp", DeviceClass.NONCRITICAL,
                   Room.BEDROOM, True),  # bedTableLamp
-           Device(25, DeviceClass.NONCRITICAL, Room.BEDROOM, False),  # bed
-           Device(26, DeviceClass.NONCRITICAL,
+           Device(25, "Bed", DeviceClass.NONCRITICAL,
+                  Room.BEDROOM, False),  # bed
+           Device(26, "Bathroom Light", DeviceClass.NONCRITICAL,
                   Room.BATHROOM, True),  # bathroomLight
-           Device(27, DeviceClass.CRITICAL, Room.BATHROOM,
+           Device(27, "Bathroom Door Lock", DeviceClass.CRITICAL, Room.BATHROOM,
                   True),  # bathroomDoorLock
-           Device(28, DeviceClass.NONCRITICAL,
+           Device(28, "Bathroom Door", DeviceClass.NONCRITICAL,
                   Room.BATHROOM, True),  # bathroomDoor
-           Device(29, DeviceClass.NONCRITICAL, Room.BATHROOM, False)]  # bathroomCarp
+           Device(29, "Bathroom Carpet", DeviceClass.NONCRITICAL, Room.BATHROOM, False)]  # bathroomCarp
 
 # act_window = queue.Queue(WINDOW_SIZE)
 # requests = [{"time": "2016-03-03 18:30:31", "req": Request(1, devices[8], users[4], Context(
@@ -110,7 +113,7 @@ adult_critical = Ontology(UserLevel.ADULT, DeviceClass.CRITICAL,
 admin_critical = Ontology(UserLevel.ADMIN, DeviceClass.CRITICAL,
                           adult_critical.capabilities + [Action.MANAGE])
 
-visitor_noncritical = Ontology(UserLevel.VISITOR, DeviceClass.CRITICAL, [
+visitor_noncritical = Ontology(UserLevel.VISITOR, DeviceClass.NONCRITICAL, [
     Action.VIEW, Action.CONTROL])
 child_noncritical = Ontology(
     UserLevel.CHILD, DeviceClass.NONCRITICAL, visitor_noncritical.capabilities + [])
@@ -167,6 +170,11 @@ tests = [
     # },
 ]
 
+sim_user = users[2]
+sim_context = Context(
+    AccessWay.PERSONAL, Localization.INTERNAL, Group.ALONE)
+sim_action = Action.CONTROL
+
 id_req = 0
 # 174,809 lines of records, 2 months, 60 days, 1 line per second
 with open('data/d6_2m_0tm.csv', newline='') as csvfile:
@@ -220,8 +228,8 @@ with open('data/d6_2m_0tm.csv', newline='') as csvfile:
                 id_req += 1
                 test = next(
                     (test for test in tests if test["req"] == id_req), None)
-                req = Request(id_req, devices[change[0]], users[0], Context(
-                    AccessWay.PERSONAL, Localization.INTERNAL, Group.ALONE), Action.CONTROL)
+                req = Request(
+                    id_req, devices[change[0]], sim_user, sim_context, sim_action)
                 if test:
                     req.user = test["user"]
                     req.context = test["context"]
@@ -235,6 +243,60 @@ admin_users = len(
     list(filter(lambda user: user.user_level == UserLevel.ADMIN, users)))
 critical_devices = len(list(
     filter(lambda device: device.device_class == DeviceClass.CRITICAL, devices)))
+
+
+print("\nSimulation user:")
+print(sim_user)
+print()
+
+print("\nSimulation context:")
+print(sim_context)
+
+print("\nSimulation action:")
+print(sim_action)
+
+
+def print_values(enum: Enum):
+    for en in enum:
+        print("{} - {}".format(en.name, en.value[1]))
+
+
+print("\nSimulation configuration:")
+print("User Level")
+print_values(UserLevel)
+print()
+
+print("Action")
+print_values(Action)
+print()
+
+print("Device Class")
+print_values(DeviceClass)
+print()
+
+
+print("\nSimulation context factors:")
+
+print("Time")
+print_values(TimeClass)
+print()
+
+print("Localization")
+print_values(Localization)
+print()
+
+print("Age")
+print_values(Age)
+print()
+
+print("Group")
+print_values(Group)
+print()
+
+print("Access Way")
+print_values(AccessWay)
+print()
+
 
 print("\nSimulation metrics:")
 
@@ -268,10 +330,18 @@ req_number = audit_module.req_number
 
 
 def percentage(number, total):
-    return "{}%".format(str(round(number / total * 100, 2)))
+    return "0.0%" if total == 0 else "{}%".format(str(round(number / total * 100, 2)))
 
 
-print("BLOCKS = {}".format(len(audit_module.blocks)))
+print("REQUESTS NUMBER = {}".format(req_number))
+
+req_granted = audit_module.req_granted
+print("REQUESTS GRANTED = {} ({})".format(
+    req_granted, percentage(req_granted, req_number)))
+
+req_refused = audit_module.req_refused
+print("REQUESTS REFUSED = {} ({})".format(
+    req_refused, percentage(req_refused, req_number)))
 
 ontology_fail = len(audit_module.ontology_fail)
 print("ONTOLOGY FAILS = {} ({})".format(
@@ -291,3 +361,5 @@ print("VALID PROOFS = {} ({})".format(valid_proofs, percentage(
     valid_proofs, valid_proofs + invalid_proofs)))
 print("INVALID PROOFS = {} ({})".format(invalid_proofs, percentage(
     invalid_proofs, valid_proofs + invalid_proofs)))
+
+print("BLOCKS = {}".format(len(audit_module.blocks)))

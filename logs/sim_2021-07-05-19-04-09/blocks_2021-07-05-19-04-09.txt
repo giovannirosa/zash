@@ -1,0 +1,1 @@
+2016-02-01 08:05:52 - Request[18,Device[18,Fridge,DeviceClass.CRITICAL,Room.KITCHEN],User[3,UserLevel.CHILD,Age.TEEN],Context[AccessWay.PERSONAL,Localization.INTERNAL,None,Group.ALONE],Action.CONTROL]

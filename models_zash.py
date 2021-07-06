@@ -16,7 +16,7 @@ class Context:
     def __init__(self, access_way: AccessWay, localization: Localization, group: Group):
         self.access_way = access_way
         self.localization = localization
-        self.time = None # will be computed during request in context component
+        self.time = None  # will be computed during request in context component
         self.group = group
 
     def __repr__(self):
@@ -56,17 +56,18 @@ class User:
 
 
 class Device:
-    def __init__(self, id: int, device_class: DeviceClass, room: Room, active: bool):
+    def __init__(self, id: int, name: str, device_class: DeviceClass, room: Room, active: bool):
         self.id = id
+        self.name = name
         self.device_class = device_class
         self.room = room
         self.active = active
 
     def __repr__(self):
-        return "Device[{},{},{}]".format(str(self.id), str(self.device_class), str(self.room))
+        return "Device[{},{},{},{}]".format(str(self.id), self.name, str(self.device_class), str(self.room))
 
     def __str__(self):
-        return "Device[{},{},{}]".format(str(self.id), str(self.device_class), str(self.room))
+        return "Device[{},{},{},{}]".format(str(self.id), self.name, str(self.device_class), str(self.room))
 
 
 class Request:

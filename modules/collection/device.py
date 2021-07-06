@@ -22,7 +22,7 @@ class DeviceComponent:
         if not proof:
             print("Please provide proof of identity:")
             # proof = int(input())
-            proof = 1
+            proof = req.user.id
             if proof != req.user.id:
                 self.audit_component.invalid_proofs.append(
                     AuditEvent(current_date, req))
@@ -45,8 +45,13 @@ class DeviceComponent:
         self.data_component.update_current_state(req)
         result = True
         if req.device.active:
+            print("Active {} request changing state from {} to {}".format(
+                req.device, self.data_component.last_state[req.device.id - 1], self.data_component.current_state[req.device.id - 1]))
             self.audit_component.req_number += 1
             result = self.authorization_component.authorize_request(
                 req, current_date, self.explicit_authentication)
+        else:
+            print("Passive {} changed state from {} to {}".format(
+                req.device, self.data_component.last_state[req.device.id - 1], self.data_component.current_state[req.device.id - 1]))
         self.data_component.update_last_state()
         return result
