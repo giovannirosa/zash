@@ -8,14 +8,12 @@ from modules.decision.activity import ActivityComponent
 from modules.decision.context import ContextComponent
 from modules.decision.ontology import OntologyComponent
 from modules.behavior.configuration import ConfigurationComponent
-import queue
-from datetime import datetime, timedelta
+from datetime import datetime
 from enums_zash import *
 from models_zash import *
 import sys
 import os
 
-WINDOW_SIZE = 5
 NUMBER_OF_DEVICES = 29
 ACTIVITY_COL = 29
 DATE_COL = 30
@@ -101,9 +99,6 @@ devices = [Device(1, "Wardrobe", DeviceClass.NONCRITICAL, Room.BEDROOM, True),  
                   Room.BATHROOM, True),  # bathroomDoor
            Device(29, "Bathroom Carpet", DeviceClass.NONCRITICAL, Room.BATHROOM, False)]  # bathroomCarp
 
-# act_window = queue.Queue(WINDOW_SIZE)
-# requests = [{"time": "2016-03-03 18:30:31", "req": Request(1, devices[8], users[4], Context(
-#     AccessWay.REQUESTED, Localization.INTERNAL, Time.UNCOMMOM, Age.KID, Group.ALONE), Action.CONTROL)}]
 
 visitor_critical = Ontology(UserLevel.VISITOR, DeviceClass.CRITICAL, [])
 child_critical = Ontology(UserLevel.CHILD, DeviceClass.CRITICAL,
@@ -195,35 +190,12 @@ with open('data/d6_2m_0tm.csv', newline='') as csvfile:
         if current_state == data_component.last_state:
             continue
 
-        # print('Number of devices current state: {}'.format(len(current_state)))
-        # if data_component.last_state:
-        #     print('Number of devices last state   : {}'.format(len(data_component.last_state)))
-
-        # if row[DATE_COL] == '2016-03-05 11:09:24':
-        #     devices.append(Device(17, DeviceClass.NONCRITICAL,
-        #                           Room.HOUSE, True))  # hallwayLight
-
-        # room = next(
-        #     room for room in act_room if ActivityEnum[row[29].upper()] in room["activities"])
-        # print(row[29] + " -> " + str(room["id"]) + " - " + row[30])
         act = Activity(ActivityEnum[row[ACTIVITY_COL].upper()])
-        # if act_window.empty() or act.activity is not act_window.queue[act_window.qsize() - 1].activity:
-        #     if act_window.full():
-        #         act_window.get()
-        #     act_window.put(act)
-        # print(act_window.queue)
 
         if data_component.last_state is not None:
             changes = [(i, e1, e2) for i, (e1, e2) in enumerate(
                 zip(data_component.last_state, current_state)) if e1 != e2]
-            # print("Changes:")
-            # print(changes)
             for change in changes:
-                # if change[0] == 17 and current_date < datetime.strptime('2016-03-05 11:09:24', '%Y-%m-%d %H:%M:%S'):
-                #     continue
-                # if change[0] == 8:
-                #     print('Main Door Lock')
-                # if devices[change[0]].active:
                 print(current_date, act)
                 id_req += 1
                 test = next(
@@ -300,13 +272,13 @@ print()
 
 print("\nSimulation metrics:")
 
-print("PR = {}".format(admin_users * critical_devices))
+# print("PR = {}".format(admin_users * critical_devices))
 
 # print("DE = {}".format(29 - 28))
 
-print("RI = {}".format(len(UserLevel) * len(DeviceClass)))
+# print("RI = {}".format(len(UserLevel) * len(DeviceClass)))
 
-print("SD = {}".format(len(Action) * len(DeviceClass)))
+# print("SD = {}".format(len(Action) * len(DeviceClass)))
 
 with open(os.path.join(dir, "blocks_{}.txt".format(log_id)), "w") as writer:
     writer.writelines([str(event) for event in audit_module.blocks])
