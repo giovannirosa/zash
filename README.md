@@ -19,3 +19,8 @@ Log files includes:
 - valid_proofs: requests that received valid proofs.
 - invalid_proofs: requests that received invalid proofs.
 - sim: simulation trace.
+
+# Paper
+
+For more information and details about this work, please refer to the publicated paper: https://sol.sbc.org.br/index.php/sbseg/article/view/17305
+
